@@ -13,18 +13,62 @@
 		
 BASE EQU 0x40000000
 	
+	
+	;Winnick variables
+curser EQU 0x400000BC
+
+score =  "   SCORE: 000    \n",13,0
+	ALIGN
+line1 =  "|---------------|\n",13,0
+	ALIGN
+line2 =  "|               |\n",13,0
+	ALIGN
+line3 =  "|               |\n",13,0
+	ALIGN
+line4 =  "|               |\n",13,0
+	ALIGN
+line5 =  "|               |\n",13,0
+	ALIGN	
+line6 =  "|               |\n",13,0
+	ALIGN
+line7 =  "|               |\n",13,0
+	ALIGN
+line8 =  "|               |\n",13,0
+	ALIGN
+line9 =  "|       *       |\n",13,0
+	ALIGN
+line10 = "|               |\n",13,0
+	ALIGN
+line11 = "|               |\n",13,0
+	ALIGN
+line12 = "|               |\n",13,0
+	ALIGN
+line13 = "|               |\n",13,0
+	ALIGN
+line14 = "|               |\n",13,0
+	ALIGN
+line15 = "|               |\n",13,0
+	ALIGN
+line16 = "|               |\n",13,0
+	ALIGN
+line17 = "|---------------|\n",13,0
+	ALIGN
+newadress = "                                                    ",0
+	ALIGN
+cursor_source = " ",0
+	ALIGN	
+	
+	
+	;my variables
 prompt 		= "Welcome to lab #6",10
 	ALIGN
-score		= "score : ",10
-	ALIGN	
-the_board 	= "|---------------|\n|               |\n|               |\n|               |\n|               |\n|               |\n|               |\n|               |\n|       *       |\n|               |\n|               |\n|               |\n|               |\n|               |\n|               |\n|               |\n|---------------|"
-	ALIGN	
 current_direction 		= 1			; 1 up, 2 left, 3 right, 4 down
 	ALIGN
 initiation_condition	= 0			;waiting for initialization
 	ALIGN	
 termination_condition 	= 0 		; set to 1 when game should end
 	ALIGN
+		
 
 
 lab6
@@ -39,8 +83,7 @@ lab6
 	ldr r4, =score
 	bl output_string
 	
-	ldr r4, =the_board
-	bl output_string
+	bl board_draw
 	
 pre_game
 	ldr r4, =initiation_condition
@@ -54,8 +97,6 @@ pre_game
 	str r5, [r4]
 
 game_loop
-	
-	
 	
 	;game mechanics and drawing operating on timed interrupt
 	
@@ -230,6 +271,44 @@ update_score
 board_draw
 	stmfd sp!, {r0 - r4, lr}
 	
+	MOV r0, #12
+	BL write_character
+	LDR r4,= score
+	BL output_string
+	LDR r4,= line1
+	BL output_string
+	LDR r4,= line2
+	BL output_string
+	LDR r4,= line3
+	BL output_string
+	LDR r4,= line4
+	BL output_string
+	LDR r4,= line5
+	BL output_string
+	LDR r4,= line6
+	BL output_string
+	LDR r4,= line7
+	BL output_string
+	LDR r4,= line8
+	BL output_string
+	LDR r4,= line9
+	BL output_string
+	LDR r4,= line10
+	BL output_string
+	LDR r4,= line11
+	BL output_string
+	LDR r4,= line12
+	BL output_string
+	LDR r4,= line13
+	BL output_string
+	LDR r4,= line14
+	BL output_string
+	LDR r4,= line15
+	BL output_string
+	LDR r4,= line16
+	BL output_string
+	LDR r4,= line17
+	BL output_string
 	
 	ldmfd sp!, {r0 - r4, lr}
 	bx lr

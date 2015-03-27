@@ -51,7 +51,7 @@ line17 = "|---------------|\n",13,0
 	ALIGN
 newadress = "                                                    ",0
 	ALIGN
-program_done_flag = " ",0
+cursor_source = " ",0
 	ALIGN
 
 		
@@ -61,7 +61,7 @@ lab6
 	BL uart_init
 	;BL SET_UART
 	BL interrupt_init
-	LDR r4,= program_done_flag
+	LDR r4,= cursor_source
 	MOV r0, #0
 	STRB r0, [r4]
 	
@@ -205,7 +205,7 @@ bloop   LDR r2, =0xE000C014
 		LDRB r0, [r2]
 
 		LDR r4,= curser
-		LDR r5,= program_done_flag
+		LDR r5,= cursor_source
 		LDRB r6, [r5]
 		cmp r6, #0
 		BEQ first
