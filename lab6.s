@@ -68,6 +68,8 @@ initiation_condition	= 0			;waiting for initialization
 	ALIGN	
 termination_condition 	= 0 		; set to 1 when game should end
 	ALIGN
+game_over				= "game over"
+	ALIGN
 		
 
 
@@ -108,6 +110,18 @@ game_loop
 game_termination
 	
 	;disable interrupts
+	ldr r4, =0xFFFFF010 	;interrupt enable register	(VICIntEnable)
+	ldr r5, [r4]
+	bic r5, r5, #0x10		;enable bit 4 for timer 0
+	;orr r5, r5, #0x20		;enable bit 5 for timer 1
+	bic r5, r5, #0x40		;enable bit 6 for uart0 interrupt
+	str r5, [r4]			
+
+	MOV r0, #12
+	BL write_character
+	
+	ldr r4, =prompt
+	bl output_string
 	
 	ldmfd sp!, {r4 - r12, lr}
 	bx lr
@@ -208,68 +222,129 @@ early_termination_break
 game_mechanics
 	stmfd sp!, {r0 - r4, lr}
 	
-	bl calc_movement
-	bl update_score
+	bl winnick_mechanics
 
 	ldmfd sp!, {r0 - r4, lr}
 	bx lr
 	
 	
-calc_movement
-	stmfd sp!, {r0 - r1, lr}
+winnick_mechanics
 	
-	;if destination is 45 or 124
-	;set r0 to 1 for early termination
-	
-	ldr r0, =current_direction
-	ldr r1, [r0]
-	
-	cmp r1, #1
-	beq move_up
-	
-	cmp r1, #2
-	beq move_left
-	
-	cmp r1, #3
-	beq move_right
-	
-	cmp r1, #4
-	beq move_down
-	
-	
-move_up
-	 
-	 ; move up algorithm
-	 
-	 b move_calc_done
-move_left
+		STMFD SP!, {r0-r12, lr}   ; Save registers
+		
+bloop   LDR r2, =0xE000C014
+        LDR r3, [r2]
+        AND r5, r3, #1
+        CMP r5, #0
+        BEQ bloop
+		LDR r2, =0xE000C000
+		LDRB r0, [r2]
 
-	;move left algorithm
-
-	b move_calc_done
-move_right
-
-	;move right algorithm
-
-	b move_calc_done
-move_down
-	 
-	 ;move down algorithm
+		LDR r4,= curser
+		LDR r5,= cursor_source
+		LDRB r6, [r5]
+		cmp r6, #0
+		BEQ first
+		LDR r5, =newadress
+		LDR r4, [r5]
+		b letters
+first
+		MOV r2, #1
+		STRB r2, [r5]	
+letters
+			LDRB r1, [r4]
 	
-move_calc_done
-	ldmfd sp!, {r0 - r1, lr}
+			CMP r0, #105 ;i branch to off			
+			BNE letterj
+			MOV r2, #45
+			LDRB r3, [r4, #-20]
+			CMP r2, r3
+			BEQ quit
+			MOV r2, #32
+			STRB r2, [r4]
+			SUB r4, r4, #20
+			STRB r1, [r4]
+			LDR r5, =newadress
+			STR r4, [r5]
+			b scoreinc
+
+letterj		CMP r0, #106	;j branch clear
+			BNE letterm
+			MOV r2, #124
+			LDRB r3, [r4, #-1]
+			CMP r2, r3
+			BEQ quit
+			MOV r2, #32
+			STRB r2, [r4]
+			SUB r4, r4, #1
+			STRB r1, [r4]
+			LDR r5, =newadress
+			STR r4, [r5]
+			b scoreinc
+			
+letterm		CMP r0, #109 ;m branch random
+			BNE letterk
+			MOV r2, #45
+			LDRB r3, [r4, #20]
+			CMP r2, r3
+			BEQ quit
+			MOV r2, #32
+			STRB r2, [r4]
+			ADD r4, r4, #20
+			STRB r1, [r4]
+			LDR r5, =newadress
+			STR r4, [r5]
+			b scoreinc
+			
+
+letterk		CMP r0, #107	; branch quit
+			BNE quit
+			MOV r2, #124
+			LDRB r3, [r4, #1]
+			CMP r2, r3
+			BEQ quit
+			MOV r2, #32
+			STRB r2, [r4]
+			ADD r4, r4, #1
+			STRB r1, [r4]
+			LDR r5, =newadress
+			STR r4, [r5]
+			b scoreinc
+			
+			
+scoreinc	LDR r4, =0x4000000A
+			LDRH r3, [r4]
+			MOV r3, r3, LSL #16
+			LDR r4, =0x4000000C
+			LDRH r5, [r4]
+			ADD r3, r5
+			ADD r3, #0x00000100
+			AND r7, r3, #0x00003A00
+			CMP r7, #0x00003A00
+			BNE TEN
+			EOR r3, #0x0A00
+			ADD r3, #1
+			AND r7, r3, #0x0000003A
+			CMP r7, #0x0000003A
+			BNE TEN
+			EOR r3, #0x00000A
+			ADD r3, #0x01000000
+			
+TEN			MOV r5, r3
+			MOV r3, r3, LSR #16
+			LDR r4, =0x4000000A
+			STRH r3, [r4]
+			LDR r4, =0x4000000C
+			STRH r5, [r4]
+quit		
+	ldr r0, =termination_condition
+	mov r1, #1
+	str r1, [r0]
+	LDMFD SP!, {r0-r12, lr}   ; Restore registers
 	bx lr
-	
-update_score
-	stmfd sp!, {r0 - r4, lr}
-	
-	
-	ldmfd sp!, {r0 - r4, lr}
-	bx lr
-	
 	
 board_draw
-	stmfd sp!, {r0 - r4, lr}
+	stmfd sp!, {r0, r4, lr}
 	
 	MOV r0, #12
 	BL write_character
@@ -310,7 +385,7 @@ board_draw
 	LDR r4,= line17
 	BL output_string
 	
-	ldmfd sp!, {r0 - r4, lr}
+	ldmfd sp!, {r0, r4, lr}
 	bx lr
 		
 read_data_handler
@@ -318,7 +393,6 @@ read_data_handler
 	
 	BL read_character
 
-		
 
 	CMP r0, #105 ; input i - set direction up
 	BEQ set_direction_up
