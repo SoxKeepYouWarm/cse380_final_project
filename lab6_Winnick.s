@@ -1,12 +1,12 @@
 	AREA interrupts, CODE, READWRITE
-	EXPORT lab6
-	EXPORT FIQ_Handler
+	;EXPORT lab6
+	;EXPORT FIQ_Handler
 	IMPORT output_string
 	IMPORT read_string
 	IMPORT display_digit
 	IMPORT write_character
 	IMPORT uart_init
-	IMPORT SET_UART
+	;IMPORT SET_UART
 	IMPORT read_character
 
 BASE EQU 0x40000000
@@ -59,7 +59,7 @@ lab6
 	STMFD sp!, {r4 - r12, lr}
 	
 	BL uart_init
-	BL SET_UART
+	;BL SET_UART
 	BL interrupt_init
 	LDR r4,= program_done_flag
 	MOV r0, #0

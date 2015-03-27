@@ -19,11 +19,11 @@ score		= "score : ",10
 	ALIGN	
 the_board 	= "|---------------|\n|               |\n|               |\n|               |\n|               |\n|               |\n|               |\n|               |\n|       *       |\n|               |\n|               |\n|               |\n|               |\n|               |\n|               |\n|               |\n|---------------|"
 	ALIGN	
-current_direction 		= 1		; 1 up, 2 left, 3 right, 4 down
+current_direction 		= 1			; 1 up, 2 left, 3 right, 4 down
 	ALIGN
-current_speed			= 1		; intial speed is 1
-	ALIGN
-termination_condition 	= 0 	; set to 1 when game should end
+initiation_condition	= 0			;waiting for initialization
+	ALIGN	
+termination_condition 	= 0 		; set to 1 when game should end
 	ALIGN
 
 
@@ -42,7 +42,22 @@ lab6
 	ldr r4, =the_board
 	bl output_string
 	
+pre_game
+	ldr r4, =initiation_condition
+	ldr r5, [r4]
+	cmp r5, #1
+	bne pre_game
+	
+	ldr r4, =0xE0004004		;enable timer interrupt
+	ldr r5, [r4]
+	orr r5, r5, #1
+	str r5, [r4]
+
 game_loop
+	
+	
+	
+	;game mechanics and drawing operating on timed interrupt
 	
 	ldr r4, =termination_condition
 	ldr r5, [r4]
@@ -83,6 +98,10 @@ interrupt_init
 	;ldr r5, [r4]			;enable bit 3 to generate interrupt on mr1 == tc 
 	;orr r5, r5, #0x18		;enable bit 4 to reset tc when mr1 == tc
 	;str r5, [r4]
+	
+	ldr r4, =0xE000401C		;frequency = 14745600hz
+	mov r5, #0x384000		;set to 0x384000 for counting 1/4 seconds
+	str r5, [r4]			;stores speed into mr1
 
 	ldr r4, =0xE000C004		;enable uart interrupt read_data_available
 	ldr r5, [r4]
@@ -220,22 +239,24 @@ read_data_handler
 	
 	BL read_character
 
-		CMP r0, #105 ; input i - set direction up
-		BEQ set_direction_up
-
-		CMP r0, #106	; input j - set direction left
-		BEQ set_direction_left
-
-		CMP r0, #107	; input k - set direction right
-		BEQ set_direction_right
-
-		CMP r0, #109	; input m - set direction down
-		BEQ set_direction_down
-
-		ldr r4, =newline
-		bl output_string
 		
-		B read_data_handler_exit
+
+	CMP r0, #105 ; input i - set direction up
+	BEQ set_direction_up
+
+	CMP r0, #106	; input j - set direction left
+	BEQ set_direction_left
+
+	CMP r0, #107	; input k - set direction right
+	BEQ set_direction_right
+
+	CMP r0, #109	; input m - set direction down
+	BEQ set_direction_down
+
+	ldr r4, =newline
+	bl output_string
+		
+	B read_data_handler_exit
 
 set_direction_up
 	stmfd sp!, {r0 - r3}
@@ -280,5 +301,27 @@ set_direction_down
 read_data_handler_exit
     ldmfd sp!, {r0, r4, lr}
     bx lr
+	
+double_game_speed
+	stmfd sp!, {r0 - r1, lr}
+	
+	ldr r0, =0xE000401C		;load mr1
+	ldr r1, [r0]
+	lsr r1, #1				;half delay time				
+	str r1, [r0]
+	
+	ldmfd sp!, {r0 - r1, lr}
+	bx lr
+	
+halve_game_speed
+	stmfd sp!, {r0 - r1, lr}
+	
+	ldr r0, =0xE000401C		;load mr1
+	ldr r1, [r0]
+	lsl r1, #1				;double delay time
+	str r1, [r0]
+	
+	ldmfd sp!, {r0 - r1, lr}
+	bx lr
 		
 	end
