@@ -17,15 +17,18 @@ prompt 		= "Welcome to lab #6",10
 	ALIGN
 score		= "score : ",10
 	ALIGN	
-the_board 	= "|---------------|\n|               |\n|               |\n|               |\n|               |\n|               |\n|               |\n|               |\n|       *       |\n|               |\n|               |\n|               |\n|               |\n|               |\n|               |\n|               |\n|---------------|"
-	ALIGN	
+;the_board 	= "|---------------|\n|               |\n|               |\n|               |\n|               |\n|               |\n|               |\n|               |\n|       *       |\n|               |\n|               |\n|               |\n|",10               |\n|               |\n|               |\n|               |\n|---------------|"
+;	ALIGN	
 current_direction 		= 1		; 1 up, 2 left, 3 right, 4 down
 	ALIGN
 current_speed			= 1		; intial speed is 1
 	ALIGN
+initiation_condition	= 0		;waiting for initialization
+	ALIGN	
 termination_condition 	= 0 	; set to 1 when game should end
 	ALIGN
-
+DEBUG		= "this is timer 1\n",10
+	ALIGN
 
 lab6
 	stmfd sp!, {r4 - r12, lr}
@@ -39,10 +42,23 @@ lab6
 	ldr r4, =score
 	bl output_string
 	
-	ldr r4, =the_board
-	bl output_string
+;	ldr r4, =the_board
+;	bl output_string
 	
+pre_game
+	ldr r4, =initiation_condition
+	ldr r5, [r4]
+	cmp r5, #1
+	;bne pre_game
+	
+	ldr r4, =0xE0004004		;enable timer interrupt
+	ldr r5, [r4]
+	orr r5, r5, #1
+	str r5, [r4]
+
 game_loop
+	
+	;game mechanics and drawing operating on timed interrupt
 	
 	ldr r4, =termination_condition
 	ldr r5, [r4]
@@ -52,6 +68,18 @@ game_loop
 game_termination
 	
 	;disable interrupts
+	ldr r4, =0xFFFFF010 	;interrupt enable register	(VICIntEnable)
+	ldr r5, [r4]
+	bic r5, r5, #0x10		;enable bit 4 for timer 0
+	;orr r5, r5, #0x20		;enable bit 5 for timer 1
+	bic r5, r5, #0x40		;enable bit 6 for uart0 interrupt
+	str r5, [r4]			
+
+	MOV r0, #12
+	BL write_character
+	
+	ldr r4, =prompt
+	bl output_string
 	
 	ldmfd sp!, {r4 - r12, lr}
 	bx lr
@@ -107,7 +135,7 @@ read_data_interrupt
 	LDR r1, [r0]
 	and r1, r1, #1	;interrupt identification
 	cmp r1, #1		;set to 1 if no pending interrupts
-	beq FIQ_Exit
+	beq timer_one_interrupt
 	
 	;read data interrupt handler code
 	bl read_data_handler
@@ -120,7 +148,10 @@ timer_one_interrupt
 	bne FIQ_Exit
 	
 	;timer 1 matches mr1 handler code
-	bl timer_one_mr_one_handler
+	
+	;bl timer_one_mr_one_handler
+	ldr r4, =DEBUG
+	bl output_string
 
 FIQ_Exit
 	LDMFD SP!, {r0 - r2, lr}
