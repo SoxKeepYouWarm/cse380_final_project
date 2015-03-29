@@ -70,7 +70,8 @@ termination_condition 	= 0 		; set to 1 when game should end
 	ALIGN
 game_over				= "game over"
 	ALIGN
-		
+move_count				= 0			;count moves to time speed increments
+	ALIGN
 
 
 lab6
@@ -351,6 +352,17 @@ quit_early
 	mov r1, #1
 	str r1, [r0]
 quit		
+	ldr r0, =move_count
+	ldr r1, [r0]
+	cmp r1, #10
+	
+	bleq double_game_speed 		;double game speed and reset counter 
+	moveq r1, #0
+	
+	addne r1, r1, #1			;inrement counter
+	
+	str r1, [r0]
+
 	LDMFD SP!, {r0-r12, lr}   ; Restore registers
 	bx lr
 	
