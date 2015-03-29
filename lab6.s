@@ -75,7 +75,9 @@ game_over				= "game over"
 
 lab6
 	stmfd sp!, {r4 - r12, lr}
-	
+	ldr r4, =cursor_source
+	MOV r0, #0
+	STRB r0, [r4]
 	bl uart_init	
 	bl interrupt_init
 	
@@ -257,6 +259,7 @@ first
 		MOV r2, #1
 		STRB r2, [r5]	
 letters
+			
 			LDRB r1, [r4]
 	
 			CMP r0, #105 ;i branch to off			
