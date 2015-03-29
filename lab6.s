@@ -62,7 +62,7 @@ cursor_source = " ",0
 	;my variables
 prompt 		= "Welcome to lab #6",10
 	ALIGN
-current_direction 		= 1			; 1 up, 2 left, 3 right, 4 down
+current_direction 		= "i"		; 1 up, 2 left, 3 right, 4 down
 	ALIGN
 initiation_condition	= 0			;waiting for initialization
 	ALIGN	
@@ -175,16 +175,18 @@ interrupt_init
 		
 		
 FIQ_Handler		
-	ldmfd sp!, {r0 - r2, lr}	
+	stmfd sp!, {r0 - r2, lr}	
 read_data_interrupt
 	LDR r0, =0xE000C008
 	LDR r1, [r0]
 	and r1, r1, #1	;interrupt identification
 	cmp r1, #1		;set to 1 if no pending interrupts
-	beq FIQ_Exit
+	beq timer_one_interrupt
 	
 	;read data interrupt handler code
 	bl read_data_handler
+	
+	b FIQ_Exit
 	
 timer_one_interrupt
 	ldr r0, =0xE0004000
@@ -203,7 +205,7 @@ FIQ_Exit
 		
 		
 timer_one_mr_one_handler
-	stmfd sp!, {r0, r4, lr}
+	stmfd sp!, {r0, r1, lr}
 			
 	bl game_mechanics
 	
@@ -215,30 +217,33 @@ timer_one_mr_one_handler
 	bl board_draw
 
 early_termination_break
-	ldmfd sp!, {r0, r4, lr}
+	ldmfd sp!, {r0, r1, lr}
 	bx lr	
 		
 
 game_mechanics
-	stmfd sp!, {r0 - r4, lr}
+	stmfd sp!, {lr}
 	
 	bl winnick_mechanics
 
-	ldmfd sp!, {r0 - r4, lr}
+	ldmfd sp!, {lr}
 	bx lr
 	
 	
 winnick_mechanics
-	
-		STMFD SP!, {r0-r12, lr}   ; Save registers
+	STMFD SP!, {r0-r12, lr}   ; Save registers
 		
-bloop   LDR r2, =0xE000C014
-        LDR r3, [r2]
-        AND r5, r3, #1
-        CMP r5, #0
-        BEQ bloop
-		LDR r2, =0xE000C000
-		LDRB r0, [r2]
+;bloop   
+;		LDR r2, =0xE000C014
+;       LDR r3, [r2]
+;       AND r5, r3, #1
+;       CMP r5, #0
+;       BEQ bloop
+;		LDR r2, =0xE000C000
+;		LDRB r0, [r2]
+
+	ldr r1, =current_direction
+	ldrb r0, [r1]
 
 		LDR r4,= curser
 		LDR r5,= cursor_source
@@ -259,7 +264,7 @@ letters
 			MOV r2, #45
 			LDRB r3, [r4, #-20]
 			CMP r2, r3
-			BEQ quit
+			BEQ quit_early	;hit wall
 			MOV r2, #32
 			STRB r2, [r4]
 			SUB r4, r4, #20
@@ -273,7 +278,7 @@ letterj		CMP r0, #106	;j branch clear
 			MOV r2, #124
 			LDRB r3, [r4, #-1]
 			CMP r2, r3
-			BEQ quit
+			BEQ quit_early	;hit wall
 			MOV r2, #32
 			STRB r2, [r4]
 			SUB r4, r4, #1
@@ -287,7 +292,7 @@ letterm		CMP r0, #109 ;m branch random
 			MOV r2, #45
 			LDRB r3, [r4, #20]
 			CMP r2, r3
-			BEQ quit
+			BEQ quit_early	;hit wall
 			MOV r2, #32
 			STRB r2, [r4]
 			ADD r4, r4, #20
@@ -302,7 +307,7 @@ letterk		CMP r0, #107	; branch quit
 			MOV r2, #124
 			LDRB r3, [r4, #1]
 			CMP r2, r3
-			BEQ quit
+			BEQ quit_early	;hit wall
 			MOV r2, #32
 			STRB r2, [r4]
 			ADD r4, r4, #1
@@ -336,12 +341,17 @@ TEN			MOV r5, r3
 			STRH r3, [r4]
 			LDR r4, =0x4000000C
 			STRH r5, [r4]
-quit		
+			b quit
+
+quit_early
 	ldr r0, =termination_condition
 	mov r1, #1
 	str r1, [r0]
+quit		
 	LDMFD SP!, {r0-r12, lr}   ; Restore registers
 	bx lr
+	
+	
 	
 board_draw
 	stmfd sp!, {r0, r4, lr}
@@ -389,9 +399,17 @@ board_draw
 	bx lr
 		
 read_data_handler
-	stmfd sp!, {r0, r4, lr}
+	stmfd sp!, {r0 - r5, lr}
 	
-	BL read_character
+	;BL read_character
+	
+read_character_mod	
+	LDR r2, =0xE000C000	;get character
+	LDRB r0, [r2]
+
+	ldr r4, =initiation_condition
+	mov r5, #1
+	str r5, [r4]
 
 
 	CMP r0, #105 ; input i - set direction up
@@ -406,53 +424,57 @@ read_data_handler
 	CMP r0, #109	; input m - set direction down
 	BEQ set_direction_down
 
-	ldr r4, =newline
-	bl output_string
+	;ldr r4, =newline
+	;bl output_string
+	
+	ldr r4, =initiation_condition
+	mov r5, #0
+	str r5, [r4]
 		
 	B read_data_handler_exit
 
 set_direction_up
-	stmfd sp!, {r0 - r3}
+	stmfd sp!, {r0 - r1}
 	
 	ldr r0, =current_direction
-	mov r1, #1
+	mov r1, #105
 	strb r1, [r0]
 	
-	ldmfd sp!, {r0 - r3}
+	ldmfd sp!, {r0 - r1}
 	b read_data_handler_exit
 	   
 set_direction_left
-	stmfd sp!, {r0 - r3}
+	stmfd sp!, {r0 - r1}
 	
 	ldr r0, =current_direction
-	mov r1, #2
+	mov r1, #106
 	strb r1, [r0]
 
-	ldmfd sp!, {r0 - r3}
+	ldmfd sp!, {r0 - r1}
 	b read_data_handler_exit
 	
 set_direction_right
-	stmfd sp!, {r0 - r3}
+	stmfd sp!, {r0 - r1}
 	
 	ldr r0, =current_direction
-	mov r1, #3
+	mov r1, #107
 	strb r1, [r0]
 
-	ldmfd sp!, {r0 - r3}
+	ldmfd sp!, {r0 - r1}
 	b read_data_handler_exit
 	
 set_direction_down
-	stmfd sp!, {r0 - r3}
+	stmfd sp!, {r0 - r1}
 	
 	ldr r0, =current_direction
-	mov r1, #4
+	mov r1, #109
 	strb r1, [r0]
 
-	ldmfd sp!, {r0 - r3}
+	ldmfd sp!, {r0 - r1}
 	b read_data_handler_exit
 	
 read_data_handler_exit
-    ldmfd sp!, {r0, r4, lr}
+    ldmfd sp!, {r0 - r5, lr}
     bx lr
 	
 double_game_speed
