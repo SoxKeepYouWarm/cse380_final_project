@@ -30,10 +30,13 @@ line4 =  "|               |\n",13,0
 line5 =  "|               |\n",13,0
 	ALIGN	
 <<<<<<< HEAD
+<<<<<<< HEAD
 ;the_board 	= "|---------------|\n|               |\n|               |\n|               |\n|               |\n|               |\n|               |\n|               |\n|       *       |\n|               |\n|               |\n|               |\n|",10               |\n|               |\n|               |\n|               |\n|---------------|"
 ;	ALIGN	
 current_direction 		= 1		; 1 up, 2 left, 3 right, 4 down
 =======
+=======
+>>>>>>> 5f4611dcf7b14251742c96b0a709b70b714079a9
 line6 =  "|               |\n",13,0
 	ALIGN
 line7 =  "|               |\n",13,0
@@ -68,12 +71,16 @@ cursor_source = " ",0
 prompt 		= "Welcome to lab #6",10
 	ALIGN
 current_direction 		= "i"		; 1 up, 2 left, 3 right, 4 down
+<<<<<<< HEAD
 >>>>>>> origin/absorb_my_Winnick
+=======
+>>>>>>> 5f4611dcf7b14251742c96b0a709b70b714079a9
 	ALIGN
 initiation_condition	= 0			;waiting for initialization
 	ALIGN	
 termination_condition 	= 0 		; set to 1 when game should end
 	ALIGN
+<<<<<<< HEAD
 <<<<<<< HEAD
 initiation_condition	= 0		;waiting for initialization
 	ALIGN	
@@ -82,11 +89,17 @@ termination_condition 	= 0 	; set to 1 when game should end
 DEBUG		= "this is timer 1\n",10
 	ALIGN
 =======
+=======
+>>>>>>> 5f4611dcf7b14251742c96b0a709b70b714079a9
 game_over				= "game over"
 	ALIGN
-		
+move_count				= 0			;count moves to time speed increments
+	ALIGN
 
+<<<<<<< HEAD
 >>>>>>> origin/absorb_my_Winnick
+=======
+>>>>>>> 5f4611dcf7b14251742c96b0a709b70b714079a9
 
 lab6
 	stmfd sp!, {r4 - r12, lr}
@@ -103,21 +116,29 @@ lab6
 	bl output_string
 	
 <<<<<<< HEAD
+<<<<<<< HEAD
 ;	ldr r4, =the_board
 ;	bl output_string
 =======
 	bl board_draw
 >>>>>>> origin/absorb_my_Winnick
+=======
+	bl board_draw
+>>>>>>> 5f4611dcf7b14251742c96b0a709b70b714079a9
 	
 pre_game
 	ldr r4, =initiation_condition
 	ldr r5, [r4]
 	cmp r5, #1
 <<<<<<< HEAD
+<<<<<<< HEAD
 	;bne pre_game
 =======
 	bne pre_game
 >>>>>>> origin/absorb_my_Winnick
+=======
+	bne pre_game
+>>>>>>> 5f4611dcf7b14251742c96b0a709b70b714079a9
 	
 	ldr r4, =0xE0004004		;enable timer interrupt
 	ldr r5, [r4]
@@ -222,10 +243,7 @@ timer_one_interrupt
 	bne FIQ_Exit
 	
 	;timer 1 matches mr1 handler code
-	
-	;bl timer_one_mr_one_handler
-	ldr r4, =DEBUG
-	bl output_string
+	bl timer_one_mr_one_handler
 
 FIQ_Exit
 	LDMFD SP!, {r0 - r2, lr}
@@ -378,6 +396,17 @@ quit_early
 	mov r1, #1
 	str r1, [r0]
 quit		
+	ldr r0, =move_count
+	ldr r1, [r0]
+	cmp r1, #10
+	
+	bleq double_game_speed 		;double game speed and reset counter 
+	moveq r1, #0
+	
+	addne r1, r1, #1			;inrement counter
+	
+	str r1, [r0]
+
 	LDMFD SP!, {r0-r12, lr}   ; Restore registers
 	bx lr
 	
