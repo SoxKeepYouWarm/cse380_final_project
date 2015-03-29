@@ -5,19 +5,17 @@
 	IMPORT write_character
 	IMPORT read_character
 		
-	IMPORT newline
-		
+
 	EXPORT FIQ_Handler
 	EXPORT lab6
-	IMPORT store_string
-		
+
 BASE EQU 0x40000000
 	
 	
 	;Winnick variables
 curser EQU 0x400000BC
 
-score =  "   SCORE: 000    \n",13,0
+score =  "    SCORE: 000   \n",13,0
 	ALIGN
 line1 =  "|---------------|\n",13,0
 	ALIGN
@@ -81,12 +79,6 @@ lab6
 	STRB r0, [r4]
 	bl uart_init	
 	bl interrupt_init
-	
-	ldr r4, =prompt
-	bl output_string
-	
-	ldr r4, =score
-	bl output_string
 	
 	bl board_draw
 	
