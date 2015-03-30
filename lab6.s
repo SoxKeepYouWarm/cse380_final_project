@@ -5,7 +5,6 @@
 	IMPORT write_character
 	IMPORT read_character
 		
-
 	EXPORT FIQ_Handler
 	EXPORT lab6
 
@@ -84,7 +83,7 @@ lab6
 	
 pre_game
 	ldr r4, =initiation_condition
-	ldr r5, [r4]
+	ldrb r5, [r4]
 	cmp r5, #1
 	bne pre_game
 	
@@ -98,7 +97,7 @@ game_loop
 	;game mechanics and drawing operating on timed interrupt
 	
 	ldr r4, =termination_condition
-	ldr r5, [r4]
+	ldrb r5, [r4]
 	cmp r5, #1
 	bne game_loop
 
@@ -139,6 +138,11 @@ interrupt_init
 	orr r5, r5, #0x40		;enable bit 6 for fast interrupt
 	str r5, [r4]			
 
+	ldr r4, =0xE000401C		;frequency = 14745600hz
+	;mov r5, #0x3840000		;set to 0x3840000 for counting 1/4 seconds
+	LDR r5, =0x44AA20
+	str r5, [r4]			;stores speed into mr1
+
 	ldr r4, =0xE0004014		;timer 0
 	ldr r5, [r4]			;enable bit 3 to generate interrupt on mr1 == tc 
 	orr r5, r5, #0x18		;enable bit 4 to reset tc when mr1 == tc
@@ -149,9 +153,7 @@ interrupt_init
 	;orr r5, r5, #0x18		;enable bit 4 to reset tc when mr1 == tc
 	;str r5, [r4]
 	
-	ldr r4, =0xE000401C		;frequency = 14745600hz
-	mov r5, #0x384000		;set to 0x384000 for counting 1/4 seconds
-	str r5, [r4]			;stores speed into mr1
+
 
 	ldr r4, =0xE000C004		;enable uart interrupt read_data_available
 	ldr r5, [r4]
@@ -180,7 +182,7 @@ read_data_interrupt
 	
 	;read data interrupt handler code
 	bl read_data_handler
-	
+			 
 	b FIQ_Exit
 	
 timer_one_interrupt
@@ -192,6 +194,11 @@ timer_one_interrupt
 	
 	;timer 1 matches mr1 handler code
 	bl timer_one_mr_one_handler
+	
+	LDR R0, =0xE0004000		;unset timer interrupt
+	LDR R1, [R0]
+	ORR R1, R1, #2
+	STR R1, [R0]
 
 FIQ_Exit
 	LDMFD SP!, {r0 - r2, lr}
@@ -205,7 +212,7 @@ timer_one_mr_one_handler
 	bl game_mechanics
 	
 	ldr r0, =termination_condition
-	ldr r1, [r0]
+	ldrb r1, [r0]
 	cmp r1, #1
 	beq early_termination_break
 	
@@ -342,10 +349,10 @@ TEN			MOV r5, r3
 quit_early
 	ldr r0, =termination_condition
 	mov r1, #1
-	str r1, [r0]
+	strb r1, [r0]
 quit		
 	ldr r0, =move_count
-	ldr r1, [r0]
+	ldrb r1, [r0]
 	cmp r1, #10
 	
 	bleq double_game_speed 		;double game speed and reset counter 
@@ -353,7 +360,7 @@ quit
 	
 	addne r1, r1, #1			;inrement counter
 	
-	str r1, [r0]
+	strb r1, [r0]
 
 	LDMFD SP!, {r0-r12, lr}   ; Restore registers
 	bx lr
@@ -416,7 +423,7 @@ read_character_mod
 
 	ldr r4, =initiation_condition
 	mov r5, #1
-	str r5, [r4]
+	strb r5, [r4]
 
 
 	CMP r0, #105 ; input i - set direction up
@@ -436,7 +443,7 @@ read_character_mod
 	
 	ldr r4, =initiation_condition
 	mov r5, #0
-	str r5, [r4]
+	strb r5, [r4]
 		
 	B read_data_handler_exit
 
