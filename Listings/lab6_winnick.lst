@@ -1,0 +1,602 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000                 AREA             interrupts, CODE, READWRITE
+    2 00000000         ;EXPORT lab6
+    3 00000000         ;EXPORT FIQ_Handler
+    4 00000000                 IMPORT           output_string
+    5 00000000                 IMPORT           read_string
+    6 00000000                 IMPORT           display_digit
+    7 00000000                 IMPORT           write_character
+    8 00000000                 IMPORT           uart_init
+    9 00000000         ;IMPORT SET_UART
+   10 00000000                 IMPORT           read_character
+   11 00000000         
+   12 00000000 40000000 
+                       BASE    EQU              0x40000000
+   13 00000000         
+   14 00000000 400000BC 
+                       curser  EQU              0x400000BC
+   15 00000000         
+   16 00000000 20 20 20 
+              53 43 4F 
+              52 45 3A 
+              20 30 30 
+              30 20 20 
+              20 20 0A 
+              0D 00    score   =                "   SCORE: 000    \n",13,0
+   17 00000014                 ALIGN
+   18 00000014 7C 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 7C 0A 
+              0D 00    line1   =                "|---------------|\n",13,0
+   19 00000028                 ALIGN
+   20 00000028 7C 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 7C 0A 
+              0D 00    line2   =                "|               |\n",13,0
+   21 0000003C                 ALIGN
+   22 0000003C 7C 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 7C 0A 
+              0D 00    line3   =                "|               |\n",13,0
+   23 00000050                 ALIGN
+   24 00000050 7C 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 7C 0A 
+              0D 00    line4   =                "|               |\n",13,0
+   25 00000064                 ALIGN
+   26 00000064 7C 20 20 
+              20 20 20 
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 7C 0A 
+              0D 00    line5   =                "|               |\n",13,0
+   27 00000078                 ALIGN
+   28 00000078 7C 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 7C 0A 
+              0D 00    line6   =                "|               |\n",13,0
+   29 0000008C                 ALIGN
+   30 0000008C 7C 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 7C 0A 
+              0D 00    line7   =                "|               |\n",13,0
+   31 000000A0                 ALIGN
+   32 000000A0 7C 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 7C 0A 
+              0D 00    line8   =                "|               |\n",13,0
+   33 000000B4                 ALIGN
+   34 000000B4 7C 20 20 
+              20 20 20 
+              20 20 2A 
+              20 20 20 
+              20 20 20 
+              20 7C 0A 
+              0D 00    line9   =                "|       *       |\n",13,0
+   35 000000C8                 ALIGN
+   36 000000C8 7C 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 7C 0A 
+              0D 00    line10  =                "|               |\n",13,0
+   37 000000DC                 ALIGN
+   38 000000DC 7C 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 7C 0A 
+              0D 00    line11  =                "|               |\n",13,0
+   39 000000F0                 ALIGN
+   40 000000F0 7C 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+              20 7C 0A 
+              0D 00    line12  =                "|               |\n",13,0
+   41 00000104                 ALIGN
+   42 00000104 7C 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 7C 0A 
+              0D 00    line13  =                "|               |\n",13,0
+   43 00000118                 ALIGN
+   44 00000118 7C 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 7C 0A 
+              0D 00    line14  =                "|               |\n",13,0
+   45 0000012C                 ALIGN
+   46 0000012C 7C 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 7C 0A 
+              0D 00    line15  =                "|               |\n",13,0
+   47 00000140                 ALIGN
+   48 00000140 7C 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 7C 0A 
+              0D 00    line16  =                "|               |\n",13,0
+   49 00000154                 ALIGN
+   50 00000154 7C 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 7C 0A 
+              0D 00    line17  =                "|---------------|\n",13,0
+   51 00000168                 ALIGN
+   52 00000168 20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+              20 20 20 
+              20 00    newadress
+                               =                "                              
+                      ",0
+   53 0000019D 00 00 00        ALIGN
+   54 000001A0 20 00   cursor_source
+                               =                " ",0
+   55 000001A2 00 00           ALIGN
+   56 000001A4         
+   57 000001A4         
+   58 000001A4         lab6
+   59 000001A4 E92D5FF0        STMFD            sp!, {r4 - r12, lr}
+   60 000001A8         
+   61 000001A8 EBFFFFFE        BL               uart_init
+   62 000001AC         ;BL SET_UART
+   63 000001AC EB00002B        BL               interrupt_init
+   64 000001B0 E59F4388        LDR              r4,= cursor_source
+   65 000001B4 E3A00000        MOV              r0, #0
+   66 000001B8 E5C40000        STRB             r0, [r4]
+   67 000001BC         
+   68 000001BC         
+   69 000001BC E3A0000C        MOV              r0, #12
+   70 000001C0 EBFFFFFE        BL               write_character
+   71 000001C4 E59F4378        LDR              r4,= score
+   72 000001C8 EBFFFFFE        BL               output_string
+   73 000001CC E59F4374        LDR              r4,= line1
+   74 000001D0 EBFFFFFE        BL               output_string
+   75 000001D4 E59F4370        LDR              r4,= line2
+   76 000001D8 EBFFFFFE        BL               output_string
+   77 000001DC E59F436C        LDR              r4,= line3
+   78 000001E0 EBFFFFFE        BL               output_string
+   79 000001E4 E59F4368        LDR              r4,= line4
+   80 000001E8 EBFFFFFE        BL               output_string
+   81 000001EC E59F4364        LDR              r4,= line5
+   82 000001F0 EBFFFFFE        BL               output_string
+   83 000001F4 E59F4360        LDR              r4,= line6
+   84 000001F8 EBFFFFFE        BL               output_string
+   85 000001FC E59F435C        LDR              r4,= line7
+   86 00000200 EBFFFFFE        BL               output_string
+   87 00000204 E59F4358        LDR              r4,= line8
+   88 00000208 EBFFFFFE        BL               output_string
+   89 0000020C E59F4354        LDR              r4,= line9
+   90 00000210 EBFFFFFE        BL               output_string
+   91 00000214 E59F4350        LDR              r4,= line10
+   92 00000218 EBFFFFFE        BL               output_string
+   93 0000021C E59F434C        LDR              r4,= line11
+   94 00000220 EBFFFFFE        BL               output_string
+   95 00000224 E59F4348        LDR              r4,= line12
+   96 00000228 EBFFFFFE        BL               output_string
+   97 0000022C E59F4344        LDR              r4,= line13
+   98 00000230 EBFFFFFE        BL               output_string
+   99 00000234 E59F4340        LDR              r4,= line14
+  100 00000238 EBFFFFFE        BL               output_string
+  101 0000023C E59F433C        LDR              r4,= line15
+  102 00000240 EBFFFFFE        BL               output_string
+  103 00000244 E59F4338        LDR              r4,= line16
+  104 00000248 EBFFFFFE        BL               output_string
+  105 0000024C E59F4334        LDR              r4,= line17
+  106 00000250 EBFFFFFE        BL               output_string
+
+
+
+ARM Macro Assembler    Page 5 
+
+
+  107 00000254         
+  108 00000254         looploop
+  109 00000254         
+  110 00000254         
+  111 00000254 EAFFFFFE        B                looploop
+  112 00000258         
+  113 00000258 E8BD5FF0        LDMFD            sp!,{r4 - r12, lr}
+  114 0000025C E12FFF1E        BX               lr
+  115 00000260         
+  116 00000260         interrupt_init
+  117 00000260 E92D4003        STMFD            SP!, {r0-r1, lr} 
+                                                            ; Save registers 
+  118 00000264         
+  119 00000264         ; Push button setup   
+  120 00000264 E59F0320        LDR              r0, =0xE002C000
+  121 00000268 E5901000        LDR              r1, [r0]
+  122 0000026C E3811202        ORR              r1, r1, #0x20000000
+  123 00000270 E3C11201        BIC              r1, r1, #0x10000000
+  124 00000274 E5801000        STR              r1, [r0]    ; PINSEL0 bits 29:2
+                                                            8 = 10
+  125 00000278         
+  126 00000278         ; Classify sources as IRQ or FIQ
+  127 00000278 E59F0310        LDR              r0, =0xFFFFF000
+  128 0000027C E590100C        LDR              r1, [r0, #0xC]
+  129 00000280 E3811902        ORR              r1, r1, #0x8000 ; External Inte
+                                                            rrupt 1 
+  130 00000284 E3811040        ORR              r1, r1, #0x40 ;and uart0 pg52
+  131 00000288 E580100C        STR              r1, [r0, #0xC]
+  132 0000028C         
+  133 0000028C E59F0300        ldr              r0, =0xE000C004 ; enable data a
+                                                            vailable
+  134 00000290 E5901000        ldr              r1, [r0]
+  135 00000294 E3811001        orr              r1, r1, #1
+  136 00000298 E5801000        str              r1, [r0]
+  137 0000029C         
+  138 0000029C         ; Enable Interrupts
+  139 0000029C E59F02EC        LDR              r0, =0xFFFFF000
+  140 000002A0 E5901010        LDR              r1, [r0, #0x10]
+  141 000002A4 E3811902        ORR              r1, r1, #0x8000 ; External Inte
+                                                            rrupt 
+  142 000002A8 E3811040        ORR              r1, r1, #0x40 ;and uart0 pg52
+  143 000002AC E5801010        STR              r1, [r0, #0x10]
+  144 000002B0         
+  145 000002B0         ;enable uart interrupt
+  146 000002B0 E59F02DC        ldr              r0, =0xE000C004
+  147 000002B4 E5901000        ldr              r1, [r0]
+  148 000002B8 E3811001        orr              r1, r1, #1
+  149 000002BC E5801000        str              r1, [r0]
+  150 000002C0         
+  151 000002C0         ; External Interrupt 1 setup for edge sensitive
+  152 000002C0 E59F02D0        LDR              r0, =0xE01FC148
+  153 000002C4 E5901000        LDR              r1, [r0]
+  154 000002C8 E3811002        ORR              r1, r1, #2  ; EINT1 = Edge Sens
+                                                            itive
+  155 000002CC E5801000        STR              r1, [r0]
+  156 000002D0         
+  157 000002D0         ; Enable FIQ's, Disable IRQ's
+  158 000002D0 E10F0000        MRS              r0, CPSR
+  159 000002D4 E3C00040        BIC              r0, r0, #0x40
+
+
+
+ARM Macro Assembler    Page 6 
+
+
+  160 000002D8 E3800080        ORR              r0, r0, #0x80
+  161 000002DC E121F000        MSR              CPSR_c, r0
+  162 000002E0         
+  163 000002E0 E8BD4003        LDMFD            SP!, {r0-r1, lr} 
+                                                            ; Restore registers
+                                                            
+  164 000002E4 E12FFF1E        BX               lr          ; Return
+  165 000002E8         
+  166 000002E8         
+  167 000002E8         
+  168 000002E8         FIQ_Handler
+  169 000002E8 E92D4003        STMFD            SP!, {r0 - r1, lr} 
+                                                            ; Save registers 
+  170 000002EC         
+  171 000002EC         EINT1                                ; Check for EINT1 i
+                                                            nterrupt
+  172 000002EC E59F02A8        LDR              r0, =0xE01FC140
+  173 000002F0 E5901000        LDR              r1, [r0]
+  174 000002F4 E3110002        TST              r1, #2
+  175 000002F8 0A000004        BEQ              read_data_interrupt
+  176 000002FC         
+  177 000002FC         
+  178 000002FC E92D423F        STMFD            SP!, {r0 - r5, r9, lr} 
+                                                            ; Save registers 
+  179 00000300         
+  180 00000300         
+  181 00000300         
+  182 00000300         
+  183 00000300 E8BD423F        LDMFD            SP!, {r0 - r5, r9, lr} 
+                                                            ; Restore registers
+                                                            
+  184 00000304 E3811002        ORR              r1, r1, #2  ; Clear Interrupt
+  185 00000308 E5801000        STR              r1, [r0]
+  186 0000030C         
+  187 0000030C EA000089        b                FIQ_Exit
+  188 00000310         
+  189 00000310         read_data_interrupt
+  190 00000310 E59F0288        LDR              r0, =0xE000C008
+  191 00000314 E5901000        LDR              r1, [r0]
+  192 00000318 E2011001        and              r1, r1, #1  ;interrupt identifi
+                                                            cation
+  193 0000031C E3510001        cmp              r1, #1
+  194 00000320 0A000084        BEQ              FIQ_Exit
+  195 00000324         
+  196 00000324 E92D5FFF        STMFD            SP!, {r0-r12, lr} 
+                                                            ; Save registers
+  197 00000328         
+  198 00000328         
+  199 00000328 E59F2274 
+                       bloop   LDR              r2, =0xE000C014
+  200 0000032C E5923000        LDR              r3, [r2]
+  201 00000330 E2035001        AND              r5, r3, #1
+  202 00000334 E3550000        CMP              r5, #0
+  203 00000338 0AFFFFFA        BEQ              bloop
+  204 0000033C E59F2264        LDR              r2, =0xE000C000
+  205 00000340 E5D20000        LDRB             r0, [r2]
+  206 00000344         
+  207 00000344 E59F4260        LDR              r4,= curser
+  208 00000348 E3A05000        LDR              r5,= program_done_flag
+
+
+
+ARM Macro Assembler    Page 7 
+
+
+  209 0000034C E5D56000        LDRB             r6, [r5]
+  210 00000350 E3560000        cmp              r6, #0
+  211 00000354 0A000002        BEQ              first
+  212 00000358 E59F5254        LDR              r5, =newadress
+  213 0000035C E5954000        LDR              r4, [r5]
+  214 00000360 EA000001        b                letters
+  215 00000364         first
+  216 00000364 E3A02001        MOV              r2, #1
+  217 00000368 E5C52000        STRB             r2, [r5]
+  218 0000036C         letters
+  219 0000036C E5D41000        LDRB             r1, [r4]
+  220 00000370         
+  221 00000370 E3500069        CMP              r0, #105    ;i branch to off   
+                                                            
+  222 00000374 1A00000A        BNE              letterj
+  223 00000378 E3A0202D        MOV              r2, #45
+  224 0000037C E5543014        LDRB             r3, [r4, #-20]
+  225 00000380 E1520003        CMP              r2, r3
+  226 00000384 0A00006A        BEQ              quit
+  227 00000388 E3A02020        MOV              r2, #32
+  228 0000038C E5C42000        STRB             r2, [r4]
+  229 00000390 E2444014        SUB              r4, r4, #20
+  230 00000394 E5C41000        STRB             r1, [r4]
+  231 00000398 E59F5214        LDR              r5, =newadress
+  232 0000039C E5854000        STR              r4, [r5]
+  233 000003A0 EA000026        b                scoreinc
+  234 000003A4         
+  235 000003A4 E350006A 
+                       letterj CMP              r0, #106    ;j branch clear
+  236 000003A8 1A00000A        BNE              letterm
+  237 000003AC E3A0207C        MOV              r2, #124
+  238 000003B0 E5543001        LDRB             r3, [r4, #-1]
+  239 000003B4 E1520003        CMP              r2, r3
+  240 000003B8 0A00005D        BEQ              quit
+  241 000003BC E3A02020        MOV              r2, #32
+  242 000003C0 E5C42000        STRB             r2, [r4]
+  243 000003C4 E2444001        SUB              r4, r4, #1
+  244 000003C8 E5C41000        STRB             r1, [r4]
+  245 000003CC E59F51E0        LDR              r5, =newadress
+  246 000003D0 E5854000        STR              r4, [r5]
+  247 000003D4 EA000019        b                scoreinc
+  248 000003D8         
+  249 000003D8 E350006D 
+                       letterm CMP              r0, #109    ;k branch random
+  250 000003DC 1A00000A        BNE              letterk
+  251 000003E0 E3A0202D        MOV              r2, #45
+  252 000003E4 E5D43014        LDRB             r3, [r4, #20]
+  253 000003E8 E1520003        CMP              r2, r3
+  254 000003EC 0A000050        BEQ              quit
+  255 000003F0 E3A02020        MOV              r2, #32
+  256 000003F4 E5C42000        STRB             r2, [r4]
+  257 000003F8 E2844014        ADD              r4, r4, #20
+  258 000003FC E5C41000        STRB             r1, [r4]
+  259 00000400 E59F51AC        LDR              r5, =newadress
+  260 00000404 E5854000        STR              r4, [r5]
+  261 00000408 EA00000C        b                scoreinc
+  262 0000040C         
+  263 0000040C         
+  264 0000040C E350006B 
+
+
+
+ARM Macro Assembler    Page 8 
+
+
+                       letterk CMP              r0, #107    ; branch quit
+  265 00000410 1A000047        BNE              quit
+  266 00000414 E3A0207C        MOV              r2, #124
+  267 00000418 E5D43001        LDRB             r3, [r4, #1]
+  268 0000041C E1520003        CMP              r2, r3
+  269 00000420 0A000043        BEQ              quit
+  270 00000424 E3A02020        MOV              r2, #32
+  271 00000428 E5C42000        STRB             r2, [r4]
+  272 0000042C E2844001        ADD              r4, r4, #1
+  273 00000430 E5C41000        STRB             r1, [r4]
+  274 00000434 E59F5178        LDR              r5, =newadress
+  275 00000438 E5854000        STR              r4, [r5]
+  276 0000043C EAFFFFFF        b                scoreinc
+  277 00000440         
+  278 00000440         
+  279 00000440 E3A04129 
+                       scoreinc
+                               LDR              r4, =0x4000000A
+  280 00000444 E1D430B0        LDRH             r3, [r4]
+  281 00000448 E1A03803        MOV              r3, r3, LSL #16
+  282 0000044C E3A04131        LDR              r4, =0x4000000C
+  283 00000450 E1D450B0        LDRH             r5, [r4]
+  284 00000454 E0833005        ADD              r3, r5
+  285 00000458 E2833C01        ADD              r3, #0x00000100
+  286 0000045C E2037C3A        AND              r7, r3, #0x00003A00
+  287 00000460 E3570C3A        CMP              r7, #0x00003A00
+  288 00000464 1A000006        BNE              TEN
+  289 00000468 E2233C0A        EOR              r3, #0x0A00
+  290 0000046C E2833001        ADD              r3, #1
+  291 00000470 E203703A        AND              r7, r3, #0x0000003A
+  292 00000474 E357003A        CMP              r7, #0x0000003A
+  293 00000478 1A000001        BNE              TEN
+  294 0000047C E223300A        EOR              r3, #0x00000A
+  295 00000480 E2833401        ADD              r3, #0x01000000
+  296 00000484         
+  297 00000484 E1A05003 
+                       TEN     MOV              r5, r3
+  298 00000488 E1A03823        MOV              r3, r3, LSR #16
+  299 0000048C E3A04129        LDR              r4, =0x4000000A
+  300 00000490 E1C430B0        STRH             r3, [r4]
+  301 00000494 E3A04131        LDR              r4, =0x4000000C
+  302 00000498 E1C450B0        STRH             r5, [r4]
+  303 0000049C         
+  304 0000049C E3A0000C        MOV              r0, #12
+  305 000004A0 EBFFFFFE        BL               write_character
+  306 000004A4 E59F4098        LDR              r4,= score
+  307 000004A8 EBFFFFFE        BL               output_string
+  308 000004AC E59F4094        LDR              r4,= line1
+  309 000004B0 EBFFFFFE        BL               output_string
+  310 000004B4 E59F4090        LDR              r4,= line2
+  311 000004B8 EBFFFFFE        BL               output_string
+  312 000004BC E59F408C        LDR              r4,= line3
+  313 000004C0 EBFFFFFE        BL               output_string
+  314 000004C4 E59F4088        LDR              r4,= line4
+  315 000004C8 EBFFFFFE        BL               output_string
+  316 000004CC E59F4084        LDR              r4,= line5
+  317 000004D0 EBFFFFFE        BL               output_string
+  318 000004D4 E59F4080        LDR              r4,= line6
+  319 000004D8 EBFFFFFE        BL               output_string
+
+
+
+ARM Macro Assembler    Page 9 
+
+
+  320 000004DC E59F407C        LDR              r4,= line7
+  321 000004E0 EBFFFFFE        BL               output_string
+  322 000004E4 E59F4078        LDR              r4,= line8
+  323 000004E8 EBFFFFFE        BL               output_string
+  324 000004EC E59F4074        LDR              r4,= line9
+  325 000004F0 EBFFFFFE        BL               output_string
+  326 000004F4 E59F4070        LDR              r4,= line10
+  327 000004F8 EBFFFFFE        BL               output_string
+  328 000004FC E59F406C        LDR              r4,= line11
+  329 00000500 EBFFFFFE        BL               output_string
+  330 00000504 E59F4068        LDR              r4,= line12
+  331 00000508 EBFFFFFE        BL               output_string
+  332 0000050C E59F4064        LDR              r4,= line13
+  333 00000510 EBFFFFFE        BL               output_string
+  334 00000514 E59F4060        LDR              r4,= line14
+  335 00000518 EBFFFFFE        BL               output_string
+  336 0000051C E59F405C        LDR              r4,= line15
+  337 00000520 EBFFFFFE        BL               output_string
+  338 00000524 E59F4058        LDR              r4,= line16
+  339 00000528 EBFFFFFE        BL               output_string
+  340 0000052C E59F4054        LDR              r4,= line17
+  341 00000530 EBFFFFFE        BL               output_string
+  342 00000534         
+  343 00000534         quit
+  344 00000534 E8BD5FFF        LDMFD            SP!, {r0-r12, lr} 
+                                                            ; Restore registers
+                                                            
+  345 00000538         
+  346 00000538         FIQ_Exit
+  347 00000538 E8BD4003        LDMFD            SP!, {r0 - r1, lr}
+  348 0000053C E25EF004        SUBS             pc, lr, #4
+  349 00000540         
+  350 00000540         
+  351 00000540         
+  352 00000540                 END
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              E002C000 
+              FFFFF000 
+              E000C004 
+              E01FC148 
+              E01FC140 
+
+
+
+ARM Macro Assembler    Page 10 
+
+
+              E000C008 
+              E000C014 
+              E000C000 
+              400000BC 
+              00000000 
+              00000000 
+Command Line: --debug --xref --diag_suppress=9931 --apcs=interwork --depend=.\o
+bjects\lab6_winnick.d -o.\objects\lab6_winnick.o -IC:\Keil_v5\ARM\RV31\INC -IC:
+\Keil_v5\ARM\CMSIS\Include -IC:\Keil_v5\ARM\Inc\Philips --predefine="__EVAL SET
+A 1" --predefine="__UVISION_VERSION SETA 514" --list=.\listings\lab6_winnick.ls
+t lab6_Winnick.s

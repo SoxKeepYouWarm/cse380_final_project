@@ -4,6 +4,8 @@
 	IMPORT read_string
 	IMPORT write_character
 	IMPORT read_character
+	IMPORT interrupt_init
+	IMPORT div_and_mod
 		
 	EXPORT FIQ_Handler
 	EXPORT lab6
@@ -16,50 +18,50 @@ curser EQU 0x400000BC
 
 score =  "    SCORE: 000   \n",13,0
 	ALIGN
-line1 =  "|---------------|\n",13,0
+line1 =  "ZZZZZZZZZZZZZZZZZ\n",13,0
 	ALIGN
-line2 =  "|               |\n",13,0
+line2 =  "ZB             XZ\n",13,0
 	ALIGN
-line3 =  "|               |\n",13,0
+line3 =  "Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
-line4 =  "|               |\n",13,0
+line4 =  "Z               Z\n",13,0
 	ALIGN
-line5 =  "|               |\n",13,0
+line5 =  "Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN	
-line6 =  "|               |\n",13,0
+line6 =  "Z               Z\n",13,0
 	ALIGN
-line7 =  "|               |\n",13,0
+line7 =  "Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
-line8 =  "|               |\n",13,0
+line8 =  "Z               Z\n",13,0
 	ALIGN
-line9 =  "|       *       |\n",13,0
+line9 =  "Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
-line10 = "|               |\n",13,0
+line10 = "Z               Z\n",13,0
 	ALIGN
-line11 = "|               |\n",13,0
+line11 = "Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
-line12 = "|               |\n",13,0
+line12 = "Z               Z\n",13,0
 	ALIGN
-line13 = "|               |\n",13,0
+line13 = "Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
-line14 = "|               |\n",13,0
+line14 = "Z               Z\n",13,0
 	ALIGN
-line15 = "|               |\n",13,0
+line15 = "Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
-line16 = "|               |\n",13,0
+line16 = "ZX             XZ\n",13,0
 	ALIGN
-line17 = "|---------------|\n",13,0
+line17 = "ZZZZZZZZZZZZZZZZZ\n",13,0
 	ALIGN
 newadress = "                                                    ",0
 	ALIGN
 cursor_source = " ",0
 	ALIGN	
-	
-	
+
+
 	;my variables
-prompt 		= "Welcome to lab #6",10
+prompt 		= 	"Welcome to our final project,\ncontrol your character movement with wasd, and place bombs with spacebar\npause the game by pressing the hardware key",10
 	ALIGN
-current_direction 		= "i"		; 1 up, 2 left, 3 right, 4 down
+current_direction 		= " "		; 1 up, 2 left, 3 right, 4 down
 	ALIGN
 initiation_condition	= 0			;waiting for initialization
 	ALIGN	
@@ -67,9 +69,10 @@ termination_condition 	= 0 		; set to 1 when game should end
 	ALIGN
 game_over				= "game over"
 	ALIGN
-move_count				= 0			;count moves to time speed increments
+can_move				= 1			;count moves to time speed increments
 	ALIGN
-
+escape_key_sequence		= "        ",13,0
+	ALIGN
 
 lab6
 	stmfd sp!, {r4 - r12, lr}
@@ -78,11 +81,12 @@ lab6
 	STRB r0, [r4]
 	bl uart_init	
 	bl interrupt_init
-	
-	bl board_draw
+	bl set_cursor_to_position
+	ldr r4, =escape_key_sequence
+	bl output_string
 	
 pre_game
-	ldr r4, =initiation_condition
+	ldr r4, =initiation_condition		;press "ENTER" to start the game"
 	ldrb r5, [r4]
 	cmp r5, #1
 	bne pre_game
@@ -91,6 +95,8 @@ pre_game
 	ldr r5, [r4]
 	orr r5, r5, #1
 	str r5, [r4]
+
+	;BRICK_GENERATOR
 
 game_loop
 	
@@ -121,63 +127,16 @@ game_termination
 	bx lr
 	
 		
-interrupt_init
-	stmfd sp!, {r4 - r12, lr}
-	
-	ldr r4, =0xFFFFF010 	;interrupt enable register	(VICIntEnable)
-	ldr r5, [r4]
-	orr r5, r5, #0x10		;enable bit 4 for timer 0
-	;orr r5, r5, #0x20		;enable bit 5 for timer 1
-	orr r5, r5, #0x40		;enable bit 6 for uart0 interrupt
-	str r5, [r4]			
-	
-	ldr r4, =0xFFFFF00C 	; intterupt select register (VICIntSelect)
-	ldr r5, [r4]
-	orr r5, r5, #0x10		;enable bit 4 for timer 0 FIQ
-	;orr r5, r5, #0x20		;enable bit 5 for timer 1 FIQ
-	orr r5, r5, #0x40		;enable bit 6 for fast interrupt
-	str r5, [r4]			
-
-	ldr r4, =0xE000401C		;frequency = 14745600hz
-	;mov r5, #0x3840000		;set to 0x3840000 for counting 1/4 seconds
-	LDR r5, =0x44AA20
-	str r5, [r4]			;stores speed into mr1
-
-	ldr r4, =0xE0004014		;timer 0
-	ldr r5, [r4]			;enable bit 3 to generate interrupt on mr1 == tc 
-	orr r5, r5, #0x18		;enable bit 4 to reset tc when mr1 == tc
-	str r5, [r4]					
-	
-	;ldr r4, =0xE0008014	;timer 1
-	;ldr r5, [r4]			;enable bit 3 to generate interrupt on mr1 == tc 
-	;orr r5, r5, #0x18		;enable bit 4 to reset tc when mr1 == tc
-	;str r5, [r4]
-	
-
-
-	ldr r4, =0xE000C004		;enable uart interrupt read_data_available
-	ldr r5, [r4]
-	orr r5, r5, #1
-	str r5, [r4]
-	
-	MRS r0, CPSR			; Enable FIQ's, Disable IRQ's
-	BIC r0, r0, #0x40
-	ORR r0, r0, #0x80
-	MSR CPSR_c, r0
-	
-
-	ldmfd sp!, {r4 - r12, lr}
-	bx lr
-		
 		
 		
 FIQ_Handler		
 	stmfd sp!, {r0 - r2, lr}	
+	
 read_data_interrupt
 	LDR r0, =0xE000C008
 	LDR r1, [r0]
-	and r1, r1, #1	;interrupt identification
-	cmp r1, #1		;set to 1 if no pending interrupts
+	and r1, r1, #1			;interrupt identification
+	cmp r1, #1				;set to 1 if no pending interrupts
 	beq timer_one_interrupt
 	
 	;read data interrupt handler code
@@ -189,7 +148,7 @@ timer_one_interrupt
 	ldr r0, =0xE0004000
 	ldr r1, [r0]
 	and r2, r1, #2
-	cmp r2, #2		;is mr1 set
+	cmp r2, #2			;is mr1 set
 	bne FIQ_Exit
 	
 	;timer 1 matches mr1 handler code
@@ -209,241 +168,68 @@ FIQ_Exit
 timer_one_mr_one_handler
 	stmfd sp!, {r0, r1, lr}
 			
-	bl game_mechanics
+	;bl game_mechanics
 	
 	ldr r0, =termination_condition
 	ldrb r1, [r0]
 	cmp r1, #1
 	beq early_termination_break
 	
-	bl board_draw
+	;bl board_draw
 
 early_termination_break
 	ldmfd sp!, {r0, r1, lr}
 	bx lr	
 		
 
-game_mechanics
-	stmfd sp!, {lr}
 	
-	bl winnick_mechanics
-
-	ldmfd sp!, {lr}
-	bx lr
-	
-	
-winnick_mechanics
-	STMFD SP!, {r0-r12, lr}   ; Save registers
-		
-;bloop   
-;		LDR r2, =0xE000C014
-;       LDR r3, [r2]
-;       AND r5, r3, #1
-;       CMP r5, #0
-;       BEQ bloop
-;		LDR r2, =0xE000C000
-;		LDRB r0, [r2]
-
-	ldr r1, =current_direction
-	ldrb r0, [r1]
-
-		LDR r4,= curser
-		LDR r5,= cursor_source
-		LDRB r6, [r5]
-		cmp r6, #0
-		BEQ first
-		LDR r5, =newadress
-		LDR r4, [r5]
-		b letters
-first
-		MOV r2, #1
-		STRB r2, [r5]	
-letters
-			
-			LDRB r1, [r4]
-	
-			CMP r0, #105 ;i branch to off			
-			BNE letterj
-			MOV r2, #45
-			LDRB r3, [r4, #-20]
-			CMP r2, r3
-			BEQ quit_early	;hit wall
-			MOV r2, #32
-			STRB r2, [r4]
-			SUB r4, r4, #20
-			STRB r1, [r4]
-			LDR r5, =newadress
-			STR r4, [r5]
-			b scoreinc
-
-letterj		CMP r0, #106	;j branch clear
-			BNE letterm
-			MOV r2, #124
-			LDRB r3, [r4, #-1]
-			CMP r2, r3
-			BEQ quit_early	;hit wall
-			MOV r2, #32
-			STRB r2, [r4]
-			SUB r4, r4, #1
-			STRB r1, [r4]
-			LDR r5, =newadress
-			STR r4, [r5]
-			b scoreinc
-			
-letterm		CMP r0, #109 ;m branch random
-			BNE letterk
-			MOV r2, #45
-			LDRB r3, [r4, #20]
-			CMP r2, r3
-			BEQ quit_early	;hit wall
-			MOV r2, #32
-			STRB r2, [r4]
-			ADD r4, r4, #20
-			STRB r1, [r4]
-			LDR r5, =newadress
-			STR r4, [r5]
-			b scoreinc
-			
-
-letterk		CMP r0, #107	; branch quit
-			BNE quit
-			MOV r2, #124
-			LDRB r3, [r4, #1]
-			CMP r2, r3
-			BEQ quit_early	;hit wall
-			MOV r2, #32
-			STRB r2, [r4]
-			ADD r4, r4, #1
-			STRB r1, [r4]
-			LDR r5, =newadress
-			STR r4, [r5]
-			b scoreinc
-			
-			
-scoreinc	LDR r4, =0x4000000A
-			LDRH r3, [r4]
-			MOV r3, r3, LSL #16
-			LDR r4, =0x4000000C
-			LDRH r5, [r4]
-			ADD r3, r5
-			ADD r3, #0x00000100
-			AND r7, r3, #0x00003A00
-			CMP r7, #0x00003A00
-			BNE TEN
-			EOR r3, #0x0A00
-			ADD r3, #1
-			AND r7, r3, #0x0000003A
-			CMP r7, #0x0000003A
-			BNE TEN
-			EOR r3, #0x00000A
-			ADD r3, #0x01000000
-			
-TEN			MOV r5, r3
-			MOV r3, r3, LSR #16
-			LDR r4, =0x4000000A
-			STRH r3, [r4]
-			LDR r4, =0x4000000C
-			STRH r5, [r4]
-			b quit
-
-quit_early
-	ldr r0, =termination_condition
-	mov r1, #1
-	strb r1, [r0]
-quit		
-	ldr r0, =move_count
-	ldrb r1, [r0]
-	cmp r1, #10
-	
-	bleq double_game_speed 		;double game speed and reset counter 
-	moveq r1, #0
-	
-	addne r1, r1, #1			;inrement counter
-	
-	strb r1, [r0]
-
-	LDMFD SP!, {r0-r12, lr}   ; Restore registers
-	bx lr
-	
-	
-	
-board_draw
-	stmfd sp!, {r0, r4, lr}
-	
-	MOV r0, #12
-	BL write_character
-	LDR r4,= score
-	BL output_string
-	LDR r4,= line1
-	BL output_string
-	LDR r4,= line2
-	BL output_string
-	LDR r4,= line3
-	BL output_string
-	LDR r4,= line4
-	BL output_string
-	LDR r4,= line5
-	BL output_string
-	LDR r4,= line6
-	BL output_string
-	LDR r4,= line7
-	BL output_string
-	LDR r4,= line8
-	BL output_string
-	LDR r4,= line9
-	BL output_string
-	LDR r4,= line10
-	BL output_string
-	LDR r4,= line11
-	BL output_string
-	LDR r4,= line12
-	BL output_string
-	LDR r4,= line13
-	BL output_string
-	LDR r4,= line14
-	BL output_string
-	LDR r4,= line15
-	BL output_string
-	LDR r4,= line16
-	BL output_string
-	LDR r4,= line17
-	BL output_string
-	
-	ldmfd sp!, {r0, r4, lr}
-	bx lr
 		
 read_data_handler
+	stmfd sp!, {r4, r5, lr}
+	ldr r4, =initiation_condition
+	ldrb r5, [r4]
+	cmp r5, #1
+	bleq main_game_read_data_handler
+	blne pre_game_read_data_handler
+	ldmfd sp!, {r4, r5, lr}	
+	bx lr
+		
+pre_game_read_data_handler
+	stmfd sp!, {r0, r1, lr}
+	
+	LDR r1, =0xE000C000	;get character
+	LDRB r0, [r1]
+	
+	cmp r0, #13
+	bne pre_read_done	; didn't input enter, don't do anything
+	
+	ldr r0, =initiation_condition	; input was enter
+	mov r1, #1
+	str r1, [r0]
+	
+	
+pre_read_done	
+	ldmfd sp!, {r0, r1, lr}
+	bx lr
+		
+main_game_read_data_handler
 	stmfd sp!, {r0 - r5, lr}
 	
-	;BL read_character
-	
-read_character_mod	
 	LDR r2, =0xE000C000	;get character
 	LDRB r0, [r2]
 
-	ldr r4, =initiation_condition
-	mov r5, #1
-	strb r5, [r4]
 
-
-	CMP r0, #105 ; input i - set direction up
+	CMP r0, #119 ; input w - set direction up
 	BEQ set_direction_up
 
-	CMP r0, #106	; input j - set direction left
+	CMP r0, #97	; input a - set direction left
 	BEQ set_direction_left
 
-	CMP r0, #107	; input k - set direction right
+	CMP r0, #115	; input s - set direction right
 	BEQ set_direction_right
 
-	CMP r0, #109	; input m - set direction down
+	CMP r0, #100	; input d - set direction down
 	BEQ set_direction_down
-
-	;ldr r4, =newline
-	;bl output_string
-	
-	ldr r4, =initiation_condition
-	mov r5, #0
-	strb r5, [r4]
 		
 	B read_data_handler_exit
 
@@ -511,6 +297,36 @@ halve_game_speed
 	str r1, [r0]
 	
 	ldmfd sp!, {r0 - r1, lr}
+	bx lr
+	
+	
+set_cursor_to_position
+	stmfd sp!, {r4, r5, lr}
+	
+	ldr r4, =escape_key_sequence
+	mov r5, #27
+	strb r5, [r4] 
+	
+	mov r5, #91 
+	strb r5, [r4, #1]
+	
+	mov r5, #-10
+	strb r5, [r4, #2]
+	
+	;mov r5, #59
+	;strb r5, [r4, #3]
+	
+	mov r5, #1
+	strb r5, [r4, #3]
+	
+	mov r5, #102
+	strb r5, [r4, #5]
+	
+	;mov r5, #10
+	;strb r5, [r4, #6]
+	
+	
+	ldmfd sp!, {r4, r5, lr}
 	bx lr
 		
 	end

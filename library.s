@@ -7,6 +7,8 @@
 	EXPORT write_character
 	EXPORT read_character
 	EXPORT clear_display
+	EXPORT interrupt_init
+	EXPORT div_and_mod
 
 	EXPORT newline
 	EXPORT store_string
@@ -60,6 +62,53 @@ uart_init
  	LDMFD SP!, {R4 - R5, lr}
 	BX lr
 
+
+interrupt_init
+	stmfd sp!, {r4 - r12, lr}
+	
+	ldr r4, =0xFFFFF010 	;interrupt enable register	(VICIntEnable)
+	ldr r5, [r4]
+	orr r5, r5, #0x10		;enable bit 4 for timer 0
+	;orr r5, r5, #0x20		;enable bit 5 for timer 1
+	orr r5, r5, #0x40		;enable bit 6 for uart0 interrupt
+	str r5, [r4]			
+	
+	ldr r4, =0xFFFFF00C 	; intterupt select register (VICIntSelect)
+	ldr r5, [r4]
+	orr r5, r5, #0x10		;enable bit 4 for timer 0 FIQ
+	;orr r5, r5, #0x20		;enable bit 5 for timer 1 FIQ
+	orr r5, r5, #0x40		;enable bit 6 for fast interrupt
+	str r5, [r4]			
+
+	ldr r4, =0xE000401C		;frequency = 14745600hz
+	ldr r5, =0x708000		; .5 seconds
+	str r5, [r4]			;stores speed into mr1
+
+	ldr r4, =0xE0004014		;timer 0
+	ldr r5, [r4]			;enable bit 3 to generate interrupt on mr1 == tc 
+	orr r5, r5, #0x8		;enable bit 4 to reset tc when mr1 == tc
+	str r5, [r4]					
+	
+	;ldr r4, =0xE0008014	;timer 1
+	;ldr r5, [r4]			;enable bit 3 to generate interrupt on mr1 == tc 
+	;orr r5, r5, #0x18		;enable bit 4 to reset tc when mr1 == tc
+	;str r5, [r4]
+	
+
+
+	ldr r4, =0xE000C004		;enable uart interrupt read_data_available
+	ldr r5, [r4]
+	orr r5, r5, #1
+	str r5, [r4]
+	
+	MRS r0, CPSR			; Enable FIQ's, Disable IRQ's
+	BIC r0, r0, #0x40
+	ORR r0, r0, #0x80
+	MSR CPSR_c, r0
+	
+
+	ldmfd sp!, {r4 - r12, lr}
+	bx lr
 
 directory
 	STMFD SP!, {R4 - R5, lr}
@@ -374,7 +423,8 @@ display_digit
 	LDMFD SP!, {r1 - r4, lr}
 	BX LR
 	
-; pass dividend and divisor into r0, and r1	
+; pass dividend and divisor into r0, and r1.  
+; get quotient and remainder in r0, r1.
 div_and_mod
 	STMFD sp!, {r2-r7, lr}
 main
