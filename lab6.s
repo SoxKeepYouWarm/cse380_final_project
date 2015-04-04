@@ -359,7 +359,7 @@ two_is_single_digit
 	
 done_storing
 	
-	; num 1 & 2 are stored in memory, char is in r2
+	; num 1 & 2 are stored in memory, char is in r0
 
 	ldr r4, =escape_key_sequence
 	mov r5, #27		
@@ -395,14 +395,12 @@ done_storing
 	mov r5, #0
 	strb r5, [r4, #1]!		;store null termination
 	
-	ldr r4, =prompt
-	bl output_string
-	
 	ldr r4, =escape_key_sequence	
 	bl output_string
 	
+	bl write_character
+
 	ldmfd sp!, {r4, r5, lr}
 	bx lr
-	
-		
+
 	end
