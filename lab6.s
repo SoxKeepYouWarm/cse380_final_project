@@ -71,7 +71,7 @@ game_over				= "game over"
 	ALIGN
 can_move				= 1			;count moves to time speed increments
 	ALIGN
-escape_key_sequence		= "        ",13,0
+escape_key_sequence		= "        "
 	ALIGN
 
 lab6
@@ -81,9 +81,12 @@ lab6
 	STRB r0, [r4]
 	bl uart_init	
 	bl interrupt_init
-	bl set_cursor_to_position
-	ldr r4, =escape_key_sequence
-	bl output_string
+	
+	mov r0, #97
+	mov r1, #5
+	mov r2, #2
+	bl write_char_at_position
+	
 	
 pre_game
 	ldr r4, =initiation_condition		;press "ENTER" to start the game"
@@ -300,33 +303,106 @@ halve_game_speed
 	bx lr
 	
 	
-set_cursor_to_position
+num_one_store = "  "
+	ALIGN
+num_two_store = "  "
+	ALIGN
+	;take char in r0, x in r1, y in r2
+write_char_at_position
 	stmfd sp!, {r4, r5, lr}
 	
+	mov r3, r0
+	mov r4, r1
+	mov r5, r2	;free up r0, r1 for div_and_mod	
+	
+	;store num on
+	cmp r4, #10
+	bge one_is_double_digit
+	
+one_is_single_digit
+	add r7, r4, #48
+	ldr r6, =num_one_store
+	strb r7, [r6]
+	cmp r5, #10	;check num 2
+	bge two_is_double_digit
+	b two_is_single_digit
+	
+	
+one_is_double_digit
+	mov r0, r4
+	mov r1, #10
+	bl div_and_mod
+	add r0, r0, #48
+	add r1, r1, #48
+	ldr r6, =num_one_store
+	strb r0, [r6]
+	strb r1, [r6, #1]
+	cmp r5, #10	;check num 2
+	bge two_is_double_digit
+	b two_is_single_digit
+	
+	
+two_is_double_digit
+	mov r0, r5
+	mov r1, #10
+	bl div_and_mod
+	add r0, r0, #48
+	add r1, r1, #48
+	ldr r6, =num_two_store
+	strb r0, [r6]
+	strb r1, [r6, #1]
+	b done_storing
+two_is_single_digit
+	ldr r6, =num_two_store
+	add r5, r5, #48
+	strb r5, [r6]
+	
+done_storing
+	
+	; num 1 & 2 are stored in memory, char is in r2
+
 	ldr r4, =escape_key_sequence
-	mov r5, #27
-	strb r5, [r4] 
+	mov r5, #27		
+	strb r5, [r4] 			;store ESC
 	
-	mov r5, #91 
-	strb r5, [r4, #1]
+	mov r5, #91 	; [
+	strb r5, [r4, #1]!		;store bracket
 	
-	mov r5, #-10
-	strb r5, [r4, #2]
+	;add num 1
+	ldr r6, =num_one_store
+	ldrb r7, [r6]
+	ldrb r8, [r6, #1] 
 	
-	;mov r5, #59
-	;strb r5, [r4, #3]
+	strb r7, [r4, #1]!		;store first digit
+	cmp r8, #32
+	strbne r8, [r4, #1]!	;store second digit if it exists
 	
-	mov r5, #1
-	strb r5, [r4, #3]
+	mov r5, #59				;store seperator 
+	strb r5, [r4, #1]!
 	
-	mov r5, #102
-	strb r5, [r4, #5]
+	;add num 2
+	ldr r6, =num_two_store
+	ldrb r7, [r6]
+	ldrb r8, [r6, #1] 
 	
-	;mov r5, #10
-	;strb r5, [r4, #6]
+	strb r7, [r4, #1]!		;store first digit of num 2
+	cmp r8, #32
+	strbne r8, [r4, #1]!	;store second digit of num 2 if it exists
 	
+	mov r5, #72		; H		;store H command
+	strb r5, [r4, #1]!
+	
+	mov r5, #0
+	strb r5, [r4, #1]!		;store null termination
+	
+	ldr r4, =prompt
+	bl output_string
+	
+	ldr r4, =escape_key_sequence	
+	bl output_string
 	
 	ldmfd sp!, {r4, r5, lr}
 	bx lr
+	
 		
 	end

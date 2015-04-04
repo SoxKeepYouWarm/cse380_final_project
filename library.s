@@ -165,13 +165,13 @@ read_string_loop
 	
 ;outputs characters from string at r4 untill null termination	
 output_string
-    STMFD SP!, {R0 - R3, R5 - R12, lr}
+    STMFD SP!, {r0, r4, lr}
 loop    
 	LDRB r0, [r4], #1
     BL write_character
     CMP r0, #0
     BNE loop ;output_string
-    LDMFD SP!, {R0 - R3, R5 - R12, lr}
+    LDMFD SP!, {r0, r4, lr}
     BX LR
 
 
