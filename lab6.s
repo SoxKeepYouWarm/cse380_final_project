@@ -369,7 +369,7 @@ done_storing
 	strb r5, [r4, #1]!		;store bracket
 	
 	;add num 1
-	ldr r6, =num_one_store
+	ldr r6, =num_two_store
 	ldrb r7, [r6]
 	ldrb r8, [r6, #1] 
 	
@@ -381,7 +381,7 @@ done_storing
 	strb r5, [r4, #1]!
 	
 	;add num 2
-	ldr r6, =num_two_store
+	ldr r6, =num_one_store
 	ldrb r7, [r6]
 	ldrb r8, [r6, #1] 
 	
@@ -389,7 +389,7 @@ done_storing
 	cmp r8, #32
 	strbne r8, [r4, #1]!	;store second digit of num 2 if it exists
 	
-	mov r5, #72		; H		;store H command
+	mov r5, #102		; H		;store H command
 	strb r5, [r4, #1]!
 	
 	mov r5, #0
