@@ -6,6 +6,7 @@
 	IMPORT read_character
 	IMPORT interrupt_init
 	IMPORT div_and_mod
+	IMPORT write_char_at_position
 		
 	EXPORT FIQ_Handler
 	EXPORT lab6
@@ -71,8 +72,35 @@ game_over				= "game over"
 	ALIGN
 can_move				= 1			;count moves to time speed increments
 	ALIGN
-escape_key_sequence		= "        "
+
+
+;mapping variables
+bomberman_x_loc 		= 3
 	ALIGN
+bomberman_y_loc 		= 3
+	ALIGN
+bomberman_direction		= 0
+	ALIGN
+enemy_one_x_loc			= 17
+	ALIGN
+enemy_one_y_loc			= 3
+	ALIGN
+enemy_one_direction		= 0
+	ALIGN
+enemy_two_x_loc 		= 3
+	ALIGN	
+enemy_two_y_loc			= 18
+	ALIGN
+enemy_two_direction		= 0
+	ALIGN
+enemy_super_x_loc		= 17
+	ALIGN
+enemy_super_y_loc		= 18
+	ALIGN
+super_direction			= 0
+	ALIGN
+		
+		
 
 lab6
 	stmfd sp!, {r4 - r12, lr}
@@ -103,7 +131,7 @@ pre_game
 
 game_loop
 	
-	;game mechanics and drawing operating on timed interrupt
+	bl move_characters
 	
 	ldr r4, =termination_condition
 	ldrb r5, [r4]
@@ -303,104 +331,49 @@ halve_game_speed
 	bx lr
 	
 	
-num_one_store = "  "
-	ALIGN
-num_two_store = "  "
-	ALIGN
-	;take char in r0, x in r1, y in r2
-write_char_at_position
-	stmfd sp!, {r4, r5, lr}
+move_characters
+	stmfd sp!, {lr}
 	
-	mov r3, r0
-	mov r4, r1
-	mov r5, r2	;free up r0, r1 for div_and_mod	
+	bl move_bomberman
+	bl move_enemy_one
+	bl move_enemy_two
+	bl move_enemy_super
 	
-	;store num on
-	cmp r4, #10
-	bge one_is_double_digit
-	
-one_is_single_digit
-	add r7, r4, #48
-	ldr r6, =num_one_store
-	strb r7, [r6]
-	cmp r5, #10	;check num 2
-	bge two_is_double_digit
-	b two_is_single_digit
-	
-	
-one_is_double_digit
-	mov r0, r4
-	mov r1, #10
-	bl div_and_mod
-	add r0, r0, #48
-	add r1, r1, #48
-	ldr r6, =num_one_store
-	strb r0, [r6]
-	strb r1, [r6, #1]
-	cmp r5, #10	;check num 2
-	bge two_is_double_digit
-	b two_is_single_digit
-	
-	
-two_is_double_digit
-	mov r0, r5
-	mov r1, #10
-	bl div_and_mod
-	add r0, r0, #48
-	add r1, r1, #48
-	ldr r6, =num_two_store
-	strb r0, [r6]
-	strb r1, [r6, #1]
-	b done_storing
-two_is_single_digit
-	ldr r6, =num_two_store
-	add r5, r5, #48
-	strb r5, [r6]
-	
-done_storing
-	
-	; num 1 & 2 are stored in memory, char is in r0
-
-	ldr r4, =escape_key_sequence
-	mov r5, #27		
-	strb r5, [r4] 			;store ESC
-	
-	mov r5, #91 	; [
-	strb r5, [r4, #1]!		;store bracket
-	
-	;add num 1
-	ldr r6, =num_two_store
-	ldrb r7, [r6]
-	ldrb r8, [r6, #1] 
-	
-	strb r7, [r4, #1]!		;store first digit
-	cmp r8, #32
-	strbne r8, [r4, #1]!	;store second digit if it exists
-	
-	mov r5, #59				;store seperator 
-	strb r5, [r4, #1]!
-	
-	;add num 2
-	ldr r6, =num_one_store
-	ldrb r7, [r6]
-	ldrb r8, [r6, #1] 
-	
-	strb r7, [r4, #1]!		;store first digit of num 2
-	cmp r8, #32
-	strbne r8, [r4, #1]!	;store second digit of num 2 if it exists
-	
-	mov r5, #102		; H		;store H command
-	strb r5, [r4, #1]!
-	
-	mov r5, #0
-	strb r5, [r4, #1]!		;store null termination
-	
-	ldr r4, =escape_key_sequence	
-	bl output_string
-	
-	bl write_character
-
-	ldmfd sp!, {r4, r5, lr}
+	ldmfd sp!, {lr}
 	bx lr
+	
+	
+move_bomberman
+	stmfd sp!, {lr}
+	
+	ldr r0, =bomberman_x_loc
+	ldr r1, =bomberman_y_loc
+	
+	
+	
+	ldmfd sp!, {lr}
+	bx lr
+	
+move_enemy_one
+	stmfd sp!, {lr}
+	
+	ldmfd sp!, {lr}
+	bx lr
+	
+move_enemy_two
+	stmfd sp!, {lr}
+	
+	ldmfd sp!, {lr}
+	bx lr
+	
+move_enemy_super
+	stmfd sp!, {lr}
+	
+	ldmfd sp!, {lr}
+	bx lr
+	
+	
+	
+
 
 	end

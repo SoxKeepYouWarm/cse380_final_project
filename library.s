@@ -9,6 +9,7 @@
 	EXPORT clear_display
 	EXPORT interrupt_init
 	EXPORT div_and_mod
+	EXPORT write_char_at_position
 
 	EXPORT newline
 	EXPORT store_string
@@ -109,6 +110,111 @@ interrupt_init
 
 	ldmfd sp!, {r4 - r12, lr}
 	bx lr
+
+
+num_one_store = "  "
+	ALIGN
+num_two_store = "  "
+	ALIGN
+escape_key_sequence		= "        "
+	ALIGN
+	;take char in r0, x in r1, y in r2
+write_char_at_position
+	stmfd sp!, {r4, r5, lr}
+	
+	mov r3, r0
+	mov r4, r1
+	mov r5, r2	;free up r0, r1 for div_and_mod	
+	
+	;store num on
+	cmp r4, #10
+	bge one_is_double_digit
+	
+one_is_single_digit
+	add r7, r4, #48
+	ldr r6, =num_one_store
+	strb r7, [r6]
+	cmp r5, #10	;check num 2
+	bge two_is_double_digit
+	b two_is_single_digit
+	
+	
+one_is_double_digit
+	mov r0, r4
+	mov r1, #10
+	bl div_and_mod
+	add r0, r0, #48
+	add r1, r1, #48
+	ldr r6, =num_one_store
+	strb r0, [r6]
+	strb r1, [r6, #1]
+	cmp r5, #10	;check num 2
+	bge two_is_double_digit
+	b two_is_single_digit
+	
+	
+two_is_double_digit
+	mov r0, r5
+	mov r1, #10
+	bl div_and_mod
+	add r0, r0, #48
+	add r1, r1, #48
+	ldr r6, =num_two_store
+	strb r0, [r6]
+	strb r1, [r6, #1]
+	b done_storing
+two_is_single_digit
+	ldr r6, =num_two_store
+	add r5, r5, #48
+	strb r5, [r6]
+	
+done_storing
+	
+	; num 1 & 2 are stored in memory, char is in r0
+
+	ldr r4, =escape_key_sequence
+	mov r5, #27		
+	strb r5, [r4] 			;store ESC
+	
+	mov r5, #91 	; [
+	strb r5, [r4, #1]!		;store bracket
+	
+	;add num 1
+	ldr r6, =num_two_store
+	ldrb r7, [r6]
+	ldrb r8, [r6, #1] 
+	
+	strb r7, [r4, #1]!		;store first digit
+	cmp r8, #32
+	strbne r8, [r4, #1]!	;store second digit if it exists
+	
+	mov r5, #59				;store seperator 
+	strb r5, [r4, #1]!
+	
+	;add num 2
+	ldr r6, =num_one_store
+	ldrb r7, [r6]
+	ldrb r8, [r6, #1] 
+	
+	strb r7, [r4, #1]!		;store first digit of num 2
+	cmp r8, #32
+	strbne r8, [r4, #1]!	;store second digit of num 2 if it exists
+	
+	mov r5, #102		; H		;store H command
+	strb r5, [r4, #1]!
+	
+	mov r5, #0
+	strb r5, [r4, #1]!		;store null termination
+	
+	ldr r4, =escape_key_sequence	
+	bl output_string
+	
+	bl write_character
+
+	ldmfd sp!, {r4, r5, lr}
+	bx lr
+
+
 
 directory
 	STMFD SP!, {R4 - R5, lr}
