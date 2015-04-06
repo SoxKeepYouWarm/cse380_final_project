@@ -7,6 +7,8 @@
 	IMPORT interrupt_init
 	IMPORT div_and_mod
 	IMPORT write_char_at_position
+	IMPORT double_game_speed
+	IMPORT halve_game_speed
 		
 	EXPORT FIQ_Handler
 	EXPORT lab6
@@ -97,7 +99,7 @@ enemy_super_x_loc		= 17
 	ALIGN
 enemy_super_y_loc		= 18
 	ALIGN
-super_direction			= 0
+enemy_super_direction	= 0
 	ALIGN
 		
 		
@@ -308,28 +310,6 @@ read_data_handler_exit
     ldmfd sp!, {r0 - r5, lr}
     bx lr
 	
-double_game_speed
-	stmfd sp!, {r0 - r1, lr}
-	
-	ldr r0, =0xE000401C		;load mr1
-	ldr r1, [r0]
-	lsr r1, #1				;half delay time				
-	str r1, [r0]
-	
-	ldmfd sp!, {r0 - r1, lr}
-	bx lr
-	
-halve_game_speed
-	stmfd sp!, {r0 - r1, lr}
-	
-	ldr r0, =0xE000401C		;load mr1
-	ldr r1, [r0]
-	lsl r1, #1				;double delay time
-	str r1, [r0]
-	
-	ldmfd sp!, {r0 - r1, lr}
-	bx lr
-	
 	
 move_characters
 	stmfd sp!, {lr}
@@ -342,38 +322,74 @@ move_characters
 	ldmfd sp!, {lr}
 	bx lr
 	
-	
 move_bomberman
-	stmfd sp!, {lr}
+	stmfd sp!, {r0 - r2, lr}
 	
 	ldr r0, =bomberman_x_loc
 	ldr r1, =bomberman_y_loc
+	ldr r2, =bomberman_direction
 	
+	;handling movement mechanics 
+	;and mapping movement to memory
 	
-	
-	ldmfd sp!, {lr}
+	mov r0, #66
+	mov r1, #0; new x coordinate
+	mov r2, #0; new y coordinate
+	bl write_char_at_position
+	ldmfd sp!, {r0 - r2, lr}
 	bx lr
 	
 move_enemy_one
-	stmfd sp!, {lr}
+	stmfd sp!, {r0 - r2, lr}
 	
-	ldmfd sp!, {lr}
+	ldr r0, =enemy_one_x_loc
+	ldr r1, =enemy_one_y_loc
+	ldr r2, =enemy_one_direction
+	
+	;handling movement mechanics 
+	;and mapping movement to memory
+	
+	mov r0, #120
+	mov r1, #0; new x coordinate
+	mov r2, #0; new y coordinate
+	bl write_char_at_position
+	ldmfd sp!, {r0 - r2, lr}
 	bx lr
 	
 move_enemy_two
-	stmfd sp!, {lr}
+	stmfd sp!, {r0 - r2, lr}
 	
-	ldmfd sp!, {lr}
+	ldr r0, =enemy_two_x_loc
+	ldr r1, =enemy_two_y_loc
+	ldr r2, =enemy_two_direction
+	
+	;handling movement mechanics 
+	;and mapping movement to memory	
+	
+	mov r0, #120
+	mov r1, #0; new x coordinate
+	mov r2, #0; new y coordinate
+	bl write_char_at_position
+	ldmfd sp!, {r0 - r2, lr}
 	bx lr
 	
 move_enemy_super
-	stmfd sp!, {lr}
+	stmfd sp!, {r0 - r2, lr}
 	
-	ldmfd sp!, {lr}
+	ldr r0, =enemy_super_x_loc
+	ldr r1, =enemy_super_y_loc
+	ldr r2, =enemy_super_direction
+	
+	;handling movement mechanics 
+	;and mapping movement to memory	
+	
+	mov r0, #43
+	mov r1, #0; new x coordinate
+	mov r2, #0; new y coordinate
+	bl write_char_at_position
+	
+	ldmfd sp!, {r0 - r2, lr}
 	bx lr
 	
 	
-	
-
-
 	end

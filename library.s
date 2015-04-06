@@ -10,6 +10,8 @@
 	EXPORT interrupt_init
 	EXPORT div_and_mod
 	EXPORT write_char_at_position
+	EXPORT double_game_speed
+	EXPORT halve_game_speed
 
 	EXPORT newline
 	EXPORT store_string
@@ -590,6 +592,30 @@ end_program
 	ldmfd sp!, {r2 - r7, lr}
 	bx lr	  		; Return to the C program
 
+
+
+double_game_speed
+	stmfd sp!, {r0 - r1, lr}
+	
+	ldr r0, =0xE000401C		;load mr1
+	ldr r1, [r0]
+	lsr r1, #1				;half delay time				
+	str r1, [r0]
+	
+	ldmfd sp!, {r0 - r1, lr}
+	bx lr
+	
+halve_game_speed
+	stmfd sp!, {r0 - r1, lr}
+	
+	ldr r0, =0xE000401C		;load mr1
+	ldr r1, [r0]
+	lsl r1, #1				;double delay time
+	str r1, [r0]
+	
+	ldmfd sp!, {r0 - r1, lr}
+	bx lr
+	
 
 pin_connect_block_setup_for_uart0
     STMFD sp!, {r0, r1, lr}
