@@ -64,15 +64,11 @@ cursor_source = " ",0
 	;my variables
 prompt 		= 	"Welcome to our final project,\ncontrol your character movement with wasd, and place bombs with spacebar\npause the game by pressing the hardware key",10
 	ALIGN
-current_direction 		= " "		; 1 up, 2 left, 3 right, 4 down
-	ALIGN
 initiation_condition	= 0			;waiting for initialization
 	ALIGN	
 termination_condition 	= 0 		; set to 1 when game should end
 	ALIGN
 game_over				= "game over"
-	ALIGN
-can_move				= 1			;count moves to time speed increments
 	ALIGN
 
 
@@ -81,7 +77,7 @@ bomberman_x_loc 		= 3
 	ALIGN
 bomberman_y_loc 		= 3
 	ALIGN
-bomberman_direction		= 0
+bomberman_direction		= " "
 	ALIGN
 enemy_one_x_loc			= 17
 	ALIGN
@@ -113,8 +109,8 @@ lab6
 	bl interrupt_init
 	
 	mov r0, #97
-	mov r1, #5
-	mov r2, #2
+	mov r1, #3
+	mov r2, #3
 	bl write_char_at_position
 	
 	
@@ -133,7 +129,7 @@ pre_game
 
 game_loop
 	
-	bl move_characters
+	;bl move_characters
 	
 	ldr r4, =termination_condition
 	ldrb r5, [r4]
@@ -201,14 +197,14 @@ FIQ_Exit
 timer_one_mr_one_handler
 	stmfd sp!, {r0, r1, lr}
 			
-	;bl game_mechanics
+	bl move_characters
 	
 	ldr r0, =termination_condition
 	ldrb r1, [r0]
 	cmp r1, #1
 	beq early_termination_break
 	
-	;bl board_draw
+	
 
 early_termination_break
 	ldmfd sp!, {r0, r1, lr}
@@ -227,6 +223,7 @@ read_data_handler
 	ldmfd sp!, {r4, r5, lr}	
 	bx lr
 		
+		
 pre_game_read_data_handler
 	stmfd sp!, {r0, r1, lr}
 	
@@ -238,15 +235,15 @@ pre_game_read_data_handler
 	
 	ldr r0, =initiation_condition	; input was enter
 	mov r1, #1
-	str r1, [r0]
-	
+	strb r1, [r0]
 	
 pre_read_done	
 	ldmfd sp!, {r0, r1, lr}
 	bx lr
 		
+		
 main_game_read_data_handler
-	stmfd sp!, {r0 - r5, lr}
+	stmfd sp!, {r0 - r2, lr}
 	
 	LDR r2, =0xE000C000	;get character
 	LDRB r0, [r2]
@@ -267,47 +264,39 @@ main_game_read_data_handler
 	B read_data_handler_exit
 
 set_direction_up
-	stmfd sp!, {r0 - r1}
 	
-	ldr r0, =current_direction
-	mov r1, #105
+	ldr r0, =bomberman_direction
+	mov r1, #119
 	strb r1, [r0]
 	
-	ldmfd sp!, {r0 - r1}
 	b read_data_handler_exit
 	   
 set_direction_left
-	stmfd sp!, {r0 - r1}
 	
-	ldr r0, =current_direction
-	mov r1, #106
+	ldr r0, =bomberman_direction
+	mov r1, #97
 	strb r1, [r0]
 
-	ldmfd sp!, {r0 - r1}
 	b read_data_handler_exit
 	
 set_direction_right
-	stmfd sp!, {r0 - r1}
 	
-	ldr r0, =current_direction
-	mov r1, #107
+	ldr r0, =bomberman_direction
+	mov r1, #115
 	strb r1, [r0]
 
-	ldmfd sp!, {r0 - r1}
 	b read_data_handler_exit
 	
 set_direction_down
-	stmfd sp!, {r0 - r1}
 	
-	ldr r0, =current_direction
-	mov r1, #109
+	ldr r0, =bomberman_direction
+	mov r1, #100
 	strb r1, [r0]
 
-	ldmfd sp!, {r0 - r1}
 	b read_data_handler_exit
 	
 read_data_handler_exit
-    ldmfd sp!, {r0 - r5, lr}
+    ldmfd sp!, {r0 - r2, lr}
     bx lr
 	
 	
@@ -315,29 +304,59 @@ move_characters
 	stmfd sp!, {lr}
 	
 	bl move_bomberman
-	bl move_enemy_one
-	bl move_enemy_two
-	bl move_enemy_super
+	;bl move_enemy_one
+	;bl move_enemy_two
+	;bl move_enemy_super
 	
 	ldmfd sp!, {lr}
 	bx lr
 	
 move_bomberman
-	stmfd sp!, {r0 - r2, lr}
+	stmfd sp!, {r0 - r9, lr}
+		
+	ldr r4, =bomberman_direction
+	ldr r5, =bomberman_x_loc
+	ldr r6, =bomberman_y_loc
 	
-	ldr r0, =bomberman_x_loc
-	ldr r1, =bomberman_y_loc
-	ldr r2, =bomberman_direction
+	ldrb r7, [r4]
+	ldrb r8, [r5]
+	ldrb r9, [r6]
 	
 	;handling movement mechanics 
 	;and mapping movement to memory
 	
-	mov r0, #66
-	mov r1, #0; new x coordinate
-	mov r2, #0; new y coordinate
+	mov r0, #32
+	mov r1, r8		; clear old position
+	mov r2, r9		
 	bl write_char_at_position
-	ldmfd sp!, {r0 - r2, lr}
+	
+	cmp r7, #119	; move up?
+	moveq r1, r8
+	addeq r2, r9, #1
+	
+	cmp r7, #97		; move left?
+	subeq r1, r8, #1
+	moveq r2, r9
+	
+	cmp r7, #115	; move right?
+	addeq r1, r8, #1
+	moveq r2, r9
+	
+	cmp r7, #100	; move down?
+	moveq r1, r8
+	subeq r2, r9, #1
+	
+	mov r0, #66
+	bl write_char_at_position
+	
+	mov r0, #32
+	strb r0, [r4]	; clear bomberman_direction
+	
+	
+	ldmfd sp!, {r0 - r9, lr}
 	bx lr
+	
+	
 	
 move_enemy_one
 	stmfd sp!, {r0 - r2, lr}

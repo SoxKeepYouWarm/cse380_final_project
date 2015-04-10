@@ -67,7 +67,7 @@ uart_init
 
 
 interrupt_init
-	stmfd sp!, {r4 - r12, lr}
+	stmfd sp!, {r0, r4, r5, lr}
 	
 	ldr r4, =0xFFFFF010 	;interrupt enable register	(VICIntEnable)
 	ldr r5, [r4]
@@ -110,7 +110,7 @@ interrupt_init
 	MSR CPSR_c, r0
 	
 
-	ldmfd sp!, {r4 - r12, lr}
+	ldmfd sp!, {r0, r4, r5, lr}
 	bx lr
 
 
@@ -122,7 +122,7 @@ escape_key_sequence		= "        "
 	ALIGN
 	;take char in r0, x in r1, y in r2
 write_char_at_position
-	stmfd sp!, {r4, r5, lr}
+	stmfd sp!, {r0 - r8, lr}
 	
 	mov r3, r0
 	mov r4, r1
@@ -172,7 +172,7 @@ two_is_single_digit
 	
 done_storing
 	
-	; num 1 & 2 are stored in memory, char is in r0
+	; num 1 & 2 are stored in memory, char is in r3
 
 	ldr r4, =escape_key_sequence
 	mov r5, #27		
@@ -211,45 +211,12 @@ done_storing
 	ldr r4, =escape_key_sequence	
 	bl output_string
 	
+	mov r0, r3
+	
 	bl write_character
 
-	ldmfd sp!, {r4, r5, lr}
+	ldmfd sp!, {r0 - r8, lr}
 	bx lr
-
-
-
-directory
-	STMFD SP!, {R4 - R5, lr}
-	LDR r4, =store_string
-	LDRB r0, [r4]
-
-	CMP r0, #49
-	BNE first
-	BL 	display_digit
-
-first	
-	CMP r0, #50 ;checks to see if r0 is 2
-	BNE second
-	BL read_push_btns
-
-second	
-	CMP r0, #51 ;checks to see if r0 is 3
-	BNE third
-	BL LEDs
-
-third	
-	CMP r0, #52 ;checks to see if r0 is 4
-	BNE fourth
-	BL RBG_LED
-
-fourth 	
-	CMP r0, #53
-	BNE endf
-	;BL gain_super_powers
-		
-endf	
-	LDMFD SP!, {R4 - R5, lr}
-	BX LR
 	
 	
 	;saves string to store_string
@@ -441,7 +408,7 @@ quit2
 
 
 RBG_LED
-	STMFD SP!, {R1-R12, lr}
+	STMFD SP!, {r0 - r4, lr}
 	
 stag3		
 	LDR r4, =newline ;newline			
@@ -500,23 +467,23 @@ ngreen
 	B stag3;go again
 			
 quit3	
-	LDMFD SP!, {R1-R12, lr}
+	LDMFD SP!, {r0 - r4, lr}
 	BX LR
 
 
 clear_display
-    STMFD SP!, {R0 - R9, r11, r12, lr}
+    STMFD SP!, {r1, r4, lr}
 	LDR r4, =0xE0028008
 	MOV r1, #0x00003f80;load value to clear/whats writen to
 	STR r1, [r4];clear original	
 	LDR r4, =0xE002800C;load clear
 	STR r1, [r4];
-    LDMFD SP!, {R0 - R9, r11, r12, lr}
+    LDMFD SP!, {r1, r4, lr}
     BX LR
 
 
 display_digit
-	STMFD SP!, {R1-R9, r11, r12, lr}
+	STMFD SP!, {r0 - r4, lr}
 	
 	ldr r4, =0xE0028000 ; base address
 	
@@ -528,7 +495,7 @@ display_digit
 	LDR r2, [r3, r0]
 	STR r2, [r4, #4] ; store to IOSET
 
-	LDMFD SP!, {r1 - r4, lr}
+	LDMFD SP!, {r0 - r4, lr}
 	BX LR
 	
 ; pass dividend and divisor into r0, and r1.  
