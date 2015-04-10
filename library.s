@@ -4,12 +4,12 @@
 	EXPORT display_digit
 	EXPORT pin_connect_block_setup_for_uart0
 	EXPORT uart_init
-	EXPORT write_character
+	;EXPORT write_character
 	EXPORT read_character
 	EXPORT clear_display
 	EXPORT interrupt_init
 	EXPORT div_and_mod
-	EXPORT write_char_at_position
+	;EXPORT write_char_at_position
 	EXPORT double_game_speed
 	EXPORT halve_game_speed
 
@@ -89,7 +89,7 @@ interrupt_init
 
 	ldr r4, =0xE0004014		;timer 0
 	ldr r5, [r4]			;enable bit 3 to generate interrupt on mr1 == tc 
-	orr r5, r5, #0x8		;enable bit 4 to reset tc when mr1 == tc
+	orr r5, r5, #0x18		;enable bit 4 to reset tc when mr1 == tc
 	str r5, [r4]					
 	
 	;ldr r4, =0xE0008014	;timer 1

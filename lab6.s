@@ -2,11 +2,11 @@
 	IMPORT uart_init
 	IMPORT output_string
 	IMPORT read_string
-	IMPORT write_character
+	;IMPORT write_character
 	IMPORT read_character
 	IMPORT interrupt_init
 	IMPORT div_and_mod
-	IMPORT write_char_at_position
+	;IMPORT write_char_at_position
 	IMPORT double_game_speed
 	IMPORT halve_game_speed
 		
@@ -326,25 +326,25 @@ move_bomberman
 	;and mapping movement to memory
 	
 	mov r0, #32
-	mov r1, r8		; clear old position
+	mov r1, r8			; clear old position
 	mov r2, r9		
 	bl write_char_at_position
 	
-	cmp r7, #119	; move up?
+	cmp r7, #119		; move up?
 	moveq r1, r8
-	addeq r2, r9, #1
+	subeq r2, r9, #1	; negative vertical axis
 	
-	cmp r7, #97		; move left?
+	cmp r7, #97			; move left?
 	subeq r1, r8, #1
 	moveq r2, r9
 	
-	cmp r7, #115	; move right?
+	cmp r7, #100		; move right?
 	addeq r1, r8, #1
 	moveq r2, r9
 	
-	cmp r7, #100	; move down?
+	cmp r7, #115		; move down?
 	moveq r1, r8
-	subeq r2, r9, #1
+	addeq r2, r9, #1
 	
 	mov r0, #66
 	bl write_char_at_position
@@ -352,6 +352,8 @@ move_bomberman
 	mov r0, #32
 	strb r0, [r4]	; clear bomberman_direction
 	
+	strb r1, [r5]	; update bomberman x loc
+	strb r2, [r6]	; update bomberman y loc
 	
 	ldmfd sp!, {r0 - r9, lr}
 	bx lr
@@ -410,5 +412,125 @@ move_enemy_super
 	ldmfd sp!, {r0 - r2, lr}
 	bx lr
 	
+	
+num_one_store = "  "
+	ALIGN
+num_two_store = "  "
+	ALIGN
+escape_key_sequence		= "                "
+	ALIGN
+	;take char in r0, x in r1, y in r2
+write_char_at_position
+	stmfd sp!, {r0 - r8, lr}
+	
+	mov r3, r0
+	mov r4, r1
+	mov r5, r2	;free up r0, r1 for div_and_mod	
+	
+	;store num on
+	cmp r4, #10
+	bge one_is_double_digit
+	
+one_is_single_digit
+	add r7, r4, #48
+	ldr r6, =num_one_store
+	strb r7, [r6]
+	cmp r5, #10	;check num 2
+	bge two_is_double_digit
+	b two_is_single_digit
+	
+	
+one_is_double_digit
+	mov r0, r4
+	mov r1, #10
+	bl div_and_mod
+	add r0, r0, #48
+	add r1, r1, #48
+	ldr r6, =num_one_store
+	strb r0, [r6]
+	strb r1, [r6, #1]
+	cmp r5, #10	;check num 2
+	bge two_is_double_digit
+	b two_is_single_digit
+	
+	
+two_is_double_digit
+	mov r0, r5
+	mov r1, #10
+	bl div_and_mod
+	add r0, r0, #48
+	add r1, r1, #48
+	ldr r6, =num_two_store
+	strb r0, [r6]
+	strb r1, [r6, #1]
+	b done_storing
+two_is_single_digit
+	ldr r6, =num_two_store
+	add r5, r5, #48
+	strb r5, [r6]
+	
+done_storing
+	
+	; num 1 & 2 are stored in memory, char is in r3
+
+	ldr r4, =escape_key_sequence
+	mov r5, #27		
+	strb r5, [r4] 			;store ESC
+	
+	mov r5, #91 	; [
+	strb r5, [r4, #1]!		;store bracket
+	
+	;add num 1
+	ldr r6, =num_two_store
+	ldrb r7, [r6]
+	ldrb r8, [r6, #1] 
+	
+	strb r7, [r4, #1]!		;store first digit
+	cmp r8, #32
+	strbne r8, [r4, #1]!	;store second digit if it exists
+	
+	mov r5, #59				;store seperator 
+	strb r5, [r4, #1]!
+	
+	;add num 2
+	ldr r6, =num_one_store
+	ldrb r7, [r6]
+	ldrb r8, [r6, #1] 
+	
+	strb r7, [r4, #1]!		;store first digit of num 2
+	cmp r8, #32
+	strbne r8, [r4, #1]!	;store second digit of num 2 if it exists
+	
+	mov r5, #102		; H		;store H command
+	strb r5, [r4, #1]!
+	
+	mov r5, #0
+	strb r5, [r4, #1]!		;store null termination
+	
+	ldr r4, =escape_key_sequence	
+	bl output_string
+	
+	mov r0, r3
+	
+	bl write_character
+
+	ldmfd sp!, {r0 - r8, lr}
+	bx lr
+	
+	
+	;prints r0 to display
+write_character
+    STMFD SP!, {R1 - R3, lr}
+wloop    
+	LDR r1, =0xE000C014
+    LDR r2, [r1]
+    AND r3, r2, #32
+    CMP r3, #0
+    BEQ wloop
+	
+    LDR r1, =0xE000C000
+    STRB r0 , [r1]
+    LDMFD SP!, {R1 - R3, lr}
+    BX LR    
 	
 	end
