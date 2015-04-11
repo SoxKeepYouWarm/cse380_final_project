@@ -513,6 +513,15 @@ done_storing
 	mov r0, r3
 	
 	bl write_character
+	
+	ldr r0, =num_one_store		; clear memory variables
+	mov r1, #32			
+	strb r1, [r0]
+	strb r1, [r0, #1]
+	
+	ldr r0, =num_two_store
+	strb r1, [r0]
+	strb r1, [r0, #1]
 
 	ldmfd sp!, {r0 - r8, lr}
 	bx lr
