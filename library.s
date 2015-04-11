@@ -4,7 +4,7 @@
 	EXPORT display_digit
 	EXPORT pin_connect_block_setup_for_uart0
 	EXPORT uart_init
-	;EXPORT write_character
+	EXPORT write_character
 	EXPORT read_character
 	EXPORT clear_display
 	EXPORT interrupt_init

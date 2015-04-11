@@ -2,7 +2,7 @@
 	IMPORT uart_init
 	IMPORT output_string
 	IMPORT read_string
-	;IMPORT write_character
+	IMPORT write_character
 	IMPORT read_character
 	IMPORT interrupt_init
 	IMPORT div_and_mod
@@ -108,7 +108,7 @@ lab6
 	bl uart_init	
 	bl interrupt_init
 	
-	mov r0, #97
+	mov r0, #66
 	mov r1, #3
 	mov r2, #3
 	bl write_char_at_position
@@ -322,6 +322,9 @@ move_bomberman
 	ldrb r8, [r5]
 	ldrb r9, [r6]
 	
+	cmp r7, #32
+	beq no_direction_input
+	
 	;handling movement mechanics 
 	;and mapping movement to memory
 	
@@ -355,6 +358,7 @@ move_bomberman
 	strb r1, [r5]	; update bomberman x loc
 	strb r2, [r6]	; update bomberman y loc
 	
+no_direction_input
 	ldmfd sp!, {r0 - r9, lr}
 	bx lr
 	
@@ -525,21 +529,6 @@ done_storing
 
 	ldmfd sp!, {r0 - r8, lr}
 	bx lr
-	
-	
-	;prints r0 to display
-write_character
-    STMFD SP!, {R1 - R3, lr}
-wloop    
-	LDR r1, =0xE000C014
-    LDR r2, [r1]
-    AND r3, r2, #32
-    CMP r3, #0
-    BEQ wloop
-	
-    LDR r1, =0xE000C000
-    STRB r0 , [r1]
-    LDMFD SP!, {R1 - R3, lr}
-    BX LR    
+	 
 	
 	end
