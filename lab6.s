@@ -132,6 +132,8 @@ lab6
 	bl uart_init	
 	bl interrupt_init
 	
+	bl draw_board_init
+	
 	mov r0, #66
 	mov r1, #3
 	mov r2, #3
@@ -562,9 +564,7 @@ done_storing
 	 ;take x and y coord in r1, r2. 
 	 ;returns char at position in r0
 read_char_at_position
-	stmfd sp!, {r0 - r5, lr}
-	
-	;is there a character on position?
+	stmfd sp!, {r3 - r5, lr}
 	
 	;is the character bomberman?
 check_for_bomberman	
@@ -632,7 +632,52 @@ check_memory_map
 	ldrb r0, [r5, r1]			; char at y coord shifted by x
 	
 read_char_at_position_done	
-	ldmfd sp!, {r0 - r5, lr}
+	ldmfd sp!, {r3 - r5, lr}
+	bx lr
+	
+draw_board_init
+	stmfd sp!, {r0, r4, lr}
+	
+	mov r0, #12
+	bl write_character
+	ldr r4, =score
+	bl output_string
+	ldr r4, =line1
+	bl output_string
+	ldr r4, =line2
+	bl output_string
+	ldr r4, =line3
+	bl output_string
+	ldr r4, =line4
+	bl output_string
+	ldr r4, =line5
+	bl output_string
+	ldr r4, =line6
+	bl output_string
+	ldr r4, =line7
+	bl output_string
+	ldr r4, =line8
+	bl output_string
+	ldr r4, =line9
+	bl output_string
+	ldr r4, =line10
+	bl output_string
+	ldr r4, =line11
+	bl output_string
+	ldr r4, =line12
+	bl output_string
+	ldr r4, =line13
+	bl output_string
+	ldr r4, =line14
+	bl output_string
+	ldr r4, =line15
+	bl output_string
+	ldr r4, =line16
+	bl output_string
+	ldr r4, =line17
+	bl output_string
+	
+	ldmfd sp!, {r0, r4, lr}
 	bx lr
 	
 	end
