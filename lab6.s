@@ -60,6 +60,30 @@ newadress = "                                                    ",0
 cursor_source = " ",0
 	ALIGN	
 
+; MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP
+memory_map 	dcdu score
+			dcdu line1
+			dcdu line2
+			dcdu line3
+			dcdu line4
+			dcdu line5
+			dcdu line6
+			dcdu line7
+			dcdu line8
+			dcdu line9
+			dcdu line10
+			dcdu line11
+			dcdu line12
+			dcdu line13
+			dcdu line14
+			dcdu line15
+			dcdu line16
+			dcdu line17
+			
+	ALIGN
+	
+; MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP 
+
 
 	;my variables
 prompt 		= 	"Welcome to our final project,\ncontrol your character movement with wasd, and place bombs with spacebar\npause the game by pressing the hardware key",10
@@ -73,27 +97,27 @@ game_over				= "game over"
 
 
 ;mapping variables
-bomberman_x_loc 		= 3
+bomberman_x_loc 		= 1
 	ALIGN
-bomberman_y_loc 		= 3
+bomberman_y_loc 		= 2
 	ALIGN
 bomberman_direction		= " "
 	ALIGN
-enemy_one_x_loc			= 17
+enemy_one_x_loc			= 15
 	ALIGN
-enemy_one_y_loc			= 3
+enemy_one_y_loc			= 2
 	ALIGN
 enemy_one_direction		= 0
 	ALIGN
-enemy_two_x_loc 		= 3
+enemy_two_x_loc 		= 1
 	ALIGN	
-enemy_two_y_loc			= 18
+enemy_two_y_loc			= 16
 	ALIGN
 enemy_two_direction		= 0
 	ALIGN
-enemy_super_x_loc		= 17
+enemy_super_x_loc		= 15
 	ALIGN
-enemy_super_y_loc		= 18
+enemy_super_y_loc		= 16
 	ALIGN
 enemy_super_direction	= 0
 	ALIGN
@@ -112,6 +136,10 @@ lab6
 	mov r1, #3
 	mov r2, #3
 	bl write_char_at_position
+	
+	mov r1, #1
+	mov r2, #2
+	bl read_char_at_position
 	
 	
 pre_game
@@ -211,7 +239,6 @@ early_termination_break
 	bx lr	
 		
 
-	
 		
 read_data_handler
 	stmfd sp!, {r4, r5, lr}
@@ -332,6 +359,7 @@ move_bomberman
 	mov r1, r8			; clear old position
 	mov r2, r9		
 	bl write_char_at_position
+	
 	
 	cmp r7, #119		; move up?
 	moveq r1, r8
@@ -530,5 +558,17 @@ done_storing
 	ldmfd sp!, {r0 - r8, lr}
 	bx lr
 	 
+	 
+	 ;take x and y coord in r1, r2. 
+	 ;returns char at position in r0
+read_char_at_position
+	stmfd sp!, {r0 - r5, lr}
+	
+	ldr r4, =memory_map
+	ldr r5, [r4, r2, lsl #2]	; line address of y coord
+	ldrb r0, [r5, r1]			; char at y coord shifted by x
+	
+	ldmfd sp!, {r0 - r5, lr}
+	bx lr
 	
 	end
