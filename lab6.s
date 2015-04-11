@@ -51,7 +51,7 @@ line14 = "Z               Z\n",13,0
 	ALIGN
 line15 = "Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
-line16 = "ZX             XZ\n",13,0
+line16 = "ZX             +Z\n",13,0
 	ALIGN
 line17 = "ZZZZZZZZZZZZZZZZZ\n",13,0
 	ALIGN
@@ -564,10 +564,74 @@ done_storing
 read_char_at_position
 	stmfd sp!, {r0 - r5, lr}
 	
+	;is there a character on position?
+	
+	;is the character bomberman?
+check_for_bomberman	
+	ldr r4, =bomberman_x_loc
+	ldrb r5, [r4]
+	cmp r5, r1
+	bne check_for_enemy_one
+	
+	ldr r4, =bomberman_y_loc
+	ldrb r5, [r4]
+	cmp r5, r2
+	bne check_for_enemy_one
+	
+	mov r0, #66		;return bomberman char
+	b read_char_at_position_done
+	
+	
+check_for_enemy_one
+	ldr r4, =enemy_one_x_loc
+	ldrb r5, [r4]
+	cmp r5, r1
+	bne check_for_enemy_two
+	
+	ldr r4, =enemy_one_y_loc
+	ldrb r5, [r4]
+	cmp r5, r2
+	bne check_for_enemy_two
+	
+	mov r0, #88
+	b read_char_at_position
+	
+
+check_for_enemy_two
+	ldr r4, =enemy_two_x_loc
+	ldrb r5, [r4]
+	cmp r5, r1
+	bne check_for_enemy_super
+	
+	ldr r4, =enemy_two_y_loc
+	ldrb r5, [r4]
+	cmp r5, r2
+	bne check_for_enemy_super
+	
+	mov r0, #88
+	b read_char_at_position_done
+	
+	
+check_for_enemy_super
+	ldr r4, =enemy_super_x_loc
+	ldrb r5, [r4]
+	cmp r5, r1
+	bne check_memory_map
+	
+	ldr r4, =enemy_super_y_loc
+	ldrb r5, [r4]
+	cmp r5, r2
+	bne check_memory_map
+	
+	mov r0, #43
+	b read_char_at_position_done
+	
+check_memory_map
 	ldr r4, =memory_map
 	ldr r5, [r4, r2, lsl #2]	; line address of y coord
 	ldrb r0, [r5, r1]			; char at y coord shifted by x
 	
+read_char_at_position_done	
 	ldmfd sp!, {r0 - r5, lr}
 	bx lr
 	
