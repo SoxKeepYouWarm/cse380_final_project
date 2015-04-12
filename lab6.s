@@ -23,7 +23,7 @@ score =  "    SCORE: 000   \n",13,0
 	ALIGN
 line1 =  "ZZZZZZZZZZZZZZZZZ\n",13,0
 	ALIGN
-line2 =  "ZB             XZ\n",13,0
+line2 =  "ZB             xZ\n",13,0
 	ALIGN
 line3 =  "Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
@@ -51,7 +51,7 @@ line14 = "Z               Z\n",13,0
 	ALIGN
 line15 = "Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
-line16 = "ZX             +Z\n",13,0
+line16 = "Zx             +Z\n",13,0
 	ALIGN
 line17 = "ZZZZZZZZZZZZZZZZZ\n",13,0
 	ALIGN
@@ -134,12 +134,20 @@ lab6
 	
 	bl draw_board_init
 	
-	mov r0, #66
-	mov r1, #3
-	mov r2, #3
-	bl write_char_at_position
+	;mov r0, #66
+	;mov r1, #3
+	;mov r2, #3
+	;bl write_char_at_position
 	
 	mov r1, #1
+	mov r2, #2
+	bl read_char_at_position
+	
+	mov r1, #0
+	mov r2, #2
+	bl read_char_at_position
+	
+	mov r1, #2
 	mov r2, #2
 	bl read_char_at_position
 	
@@ -347,12 +355,12 @@ move_bomberman
 	ldr r5, =bomberman_x_loc
 	ldr r6, =bomberman_y_loc
 	
-	ldrb r7, [r4]
-	ldrb r8, [r5]
-	ldrb r9, [r6]
+	ldrb r7, [r4]	; dir
+	ldrb r8, [r5]	; x loc
+	ldrb r9, [r6]	; y loc
 	
 	cmp r7, #32
-	beq no_direction_input
+	beq done_moving_bomberman
 	
 	;handling movement mechanics 
 	;and mapping movement to memory
@@ -379,16 +387,49 @@ move_bomberman
 	moveq r1, r8
 	addeq r2, r9, #1
 	
-	mov r0, #66
-	bl write_char_at_position
+	bl read_char_at_position		;returns char at move destination to r0
+	cmp r0, #32			; empty space?
+	beq can_move_bomberman
+	cmp r0, #90			; wall?
+	beq cant_move_bomberman
+	cmp r0, #35			; brick?
+	beq cant_move_bomberman
+	cmp r0, #111		; bomb?
+	beq cant_move_bomberman
+	cmp r0, #45			; bomb blast horizontal 
+	beq bomberman_died
+	cmp r0, #124		; bomb blast vertical
+	beq bomberman_died
+	cmp r0, #120		; enemy
+	beq bomberman_died
+	cmp r0, #43			; super enemy
+	beq bomberman_died
+	; all chars handled
 	
+	
+	
+can_move_bomberman	
+	mov r0, #66
+	bl write_char_at_position		;normal movement
+	
+cant_move_bomberman
+	mov r0, #66
+	mov r1, r8
+	mov r2, r9
+	bl write_char_at_position		;rewrites bomberman to original location
+	b done_moving_bomberman
+	
+bomberman_died
+	;handle death
+		
+	
+done_moving_bomberman
 	mov r0, #32
 	strb r0, [r4]	; clear bomberman_direction
 	
 	strb r1, [r5]	; update bomberman x loc
 	strb r2, [r6]	; update bomberman y loc
-	
-no_direction_input
+
 	ldmfd sp!, {r0 - r9, lr}
 	bx lr
 	
@@ -593,7 +634,7 @@ check_for_enemy_one
 	cmp r5, r2
 	bne check_for_enemy_two
 	
-	mov r0, #88
+	mov r0, #120
 	b read_char_at_position
 	
 
@@ -608,7 +649,7 @@ check_for_enemy_two
 	cmp r5, r2
 	bne check_for_enemy_super
 	
-	mov r0, #88
+	mov r0, #120
 	b read_char_at_position_done
 	
 	
