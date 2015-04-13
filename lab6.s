@@ -97,9 +97,9 @@ game_over				= "game over"
 
 
 ;mapping variables
-bomberman_x_loc 		= 1
+bomberman_x_loc 		= 2
 	ALIGN
-bomberman_y_loc 		= 2
+bomberman_y_loc 		= 3
 	ALIGN
 bomberman_direction		= " "
 	ALIGN
@@ -359,16 +359,18 @@ move_bomberman
 	ldrb r8, [r5]	; x loc
 	ldrb r9, [r6]	; y loc
 	
+	mov r0, #32
+	mov r1, r8			; clear old position
+	mov r2, r9	
+
 	cmp r7, #32
 	beq done_moving_bomberman
 	
 	;handling movement mechanics 
 	;and mapping movement to memory
 	
-	mov r0, #32
-	mov r1, r8			; clear old position
-	mov r2, r9		
-	bl write_char_at_position
+		
+	bl write_char_at_position	;clears old position
 	
 	
 	cmp r7, #119		; move up?
@@ -423,6 +425,7 @@ bomberman_died
 	;handle death
 		
 	
+
 done_moving_bomberman
 	mov r0, #32
 	strb r0, [r4]	; clear bomberman_direction
