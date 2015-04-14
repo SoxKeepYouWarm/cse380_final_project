@@ -72,14 +72,14 @@ interrupt_init
 	ldr r4, =0xFFFFF010 	;interrupt enable register	(VICIntEnable)
 	ldr r5, [r4]
 	orr r5, r5, #0x10		;enable bit 4 for timer 0
-	;orr r5, r5, #0x20		;enable bit 5 for timer 1
+	orr r5, r5, #0x20		;enable bit 5 for timer 1
 	orr r5, r5, #0x40		;enable bit 6 for uart0 interrupt
 	str r5, [r4]			
 	
 	ldr r4, =0xFFFFF00C 	; intterupt select register (VICIntSelect)
 	ldr r5, [r4]
 	orr r5, r5, #0x10		;enable bit 4 for timer 0 FIQ
-	;orr r5, r5, #0x20		;enable bit 5 for timer 1 FIQ
+	orr r5, r5, #0x20		;enable bit 5 for timer 1 FIQ
 	orr r5, r5, #0x40		;enable bit 6 for fast interrupt
 	str r5, [r4]			
 

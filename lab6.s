@@ -19,41 +19,43 @@ BASE EQU 0x40000000
 	;Winnick variables
 curser EQU 0x400000BC
 
-score =  "    SCORE: 000   \n",13,0
+title =  	"        Bomberman        \n",13,0
 	ALIGN
-line1 =  "ZZZZZZZZZZZZZZZZZ\n",13,0
+score =  	"   Time:120 Score:0000   \n",13,0
 	ALIGN
-line2 =  "ZB             xZ\n",13,0
+line1 =  	"ZZZZZZZZZZZZZZZZZZZZZZZZZ\n",13,0
 	ALIGN
-line3 =  "Z Z Z Z Z Z Z Z Z\n",13,0
+line2 =  	"ZB                     xZ\n",13,0
 	ALIGN
-line4 =  "Z               Z\n",13,0
+line3 =  	"Z Z Z Z Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
-line5 =  "Z Z Z Z Z Z Z Z Z\n",13,0
+line4 =  	"Z                       Z\n",13,0
+	ALIGN
+line5 =  	"Z Z Z Z Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN	
-line6 =  "Z               Z\n",13,0
+line6 =  	"Z                       Z\n",13,0
 	ALIGN
-line7 =  "Z Z Z Z Z Z Z Z Z\n",13,0
+line7 =  	"Z Z Z Z Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
-line8 =  "Z               Z\n",13,0
+line8 =  	"Z                       Z\n",13,0
 	ALIGN
-line9 =  "Z Z Z Z Z Z Z Z Z\n",13,0
+line9 =  	"Z Z Z Z Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
-line10 = "Z               Z\n",13,0
+line10 = 	"Z                       Z\n",13,0
 	ALIGN
-line11 = "Z Z Z Z Z Z Z Z Z\n",13,0
+line11 = 	"Z Z Z Z Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
-line12 = "Z               Z\n",13,0
+line12 = 	"Z                       Z\n",13,0
 	ALIGN
-line13 = "Z Z Z Z Z Z Z Z Z\n",13,0
+line13 = 	"Z Z Z Z Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
-line14 = "Z               Z\n",13,0
+line14 = 	"Z                       Z\n",13,0
 	ALIGN
-line15 = "Z Z Z Z Z Z Z Z Z\n",13,0
+line15 = 	"Z Z Z Z Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
-line16 = "Zx             +Z\n",13,0
+line16 = 	"Zx                     +Z\n",13,0
 	ALIGN
-line17 = "ZZZZZZZZZZZZZZZZZ\n",13,0
+line17 = 	"ZZZZZZZZZZZZZZZZZZZZZZZZZ\n",13,0
 	ALIGN
 newadress = "                                                    ",0
 	ALIGN
@@ -86,7 +88,7 @@ memory_map 	dcdu score
 
 
 	;my variables
-prompt 		= 	"Welcome to our final project,\ncontrol your character movement with wasd, and place bombs with spacebar\npause the game by pressing the hardware key",10
+prompt 		= 	"Welcome to our final project,\ncontrol your character movement with\nwasd, and place bombs with spacebar\npause the game by pressing the hardware key",10
 	ALIGN
 initiation_condition	= 0			;waiting for initialization
 	ALIGN	
@@ -95,29 +97,34 @@ termination_condition 	= 0 		; set to 1 when game should end
 game_over				= "game over"
 	ALIGN
 
+;game variables
+random_number dcdu 	0x00000000
+	ALIGN
+random_seed dcdu 	0x00000000
+	ALIGN
 
 ;mapping variables
 bomberman_x_loc 		= 2
 	ALIGN
-bomberman_y_loc 		= 3
+bomberman_y_loc 		= 4
 	ALIGN
 bomberman_direction		= " "
 	ALIGN
-enemy_one_x_loc			= 15
+enemy_one_x_loc			= 24
 	ALIGN
-enemy_one_y_loc			= 2
+enemy_one_y_loc			= 4
 	ALIGN
 enemy_one_direction		= 0
 	ALIGN
-enemy_two_x_loc 		= 1
+enemy_two_x_loc 		= 2
 	ALIGN	
-enemy_two_y_loc			= 16
+enemy_two_y_loc			= 18
 	ALIGN
 enemy_two_direction		= 0
 	ALIGN
-enemy_super_x_loc		= 15
+enemy_super_x_loc		= 24
 	ALIGN
-enemy_super_y_loc		= 16
+enemy_super_y_loc		= 18
 	ALIGN
 enemy_super_direction	= 0
 	ALIGN
@@ -131,33 +138,29 @@ lab6
 	STRB r0, [r4]
 	bl uart_init	
 	bl interrupt_init
+	;ldr r4, =prompt
+	;bl output_string
 	
-	bl draw_board_init
-	
-	;mov r0, #66
-	;mov r1, #3
-	;mov r2, #3
-	;bl write_char_at_position
-	
-	mov r1, #1
-	mov r2, #2
-	bl read_char_at_position
-	
-	mov r1, #0
-	mov r2, #2
-	bl read_char_at_position
-	
-	mov r1, #2
-	mov r2, #2
-	bl read_char_at_position
-	
+	ldr r4, =0xE0008004		;enable timer interrupt
+	ldr r5, [r4]
+	orr r5, r5, #1
+	str r5, [r4]
 	
 pre_game
+	
 	ldr r4, =initiation_condition		;press "ENTER" to start the game"
 	ldrb r5, [r4]
 	cmp r5, #1
 	bne pre_game
+		
+	bl draw_board_init
+
+	ldr r4, =0xE0008008
+	ldr r5, [r4]			;load tc
 	
+	ldr r6, =random_seed
+	str r5, [r6]			;store tc as random seed
+
 	ldr r4, =0xE0004004		;enable timer interrupt
 	ldr r5, [r4]
 	orr r5, r5, #1
@@ -413,6 +416,7 @@ move_bomberman
 can_move_bomberman	
 	mov r0, #66
 	bl write_char_at_position		;normal movement
+	b done_moving_bomberman
 	
 cant_move_bomberman
 	mov r0, #66
@@ -600,7 +604,16 @@ done_storing
 	ldr r0, =num_two_store
 	strb r1, [r0]
 	strb r1, [r0, #1]
-
+	
+	ldr r0, =escape_key_sequence
+	mov r1, #32
+	mov r2, #0
+clear_loop						; loop to clear escape sequence in memory
+	strb r1, [r0], #1
+	add r2, r2, #1
+	cmp r2, #8
+	bne clear_loop
+	
 	ldmfd sp!, {r0 - r8, lr}
 	bx lr
 	 
@@ -684,6 +697,8 @@ draw_board_init
 	
 	mov r0, #12
 	bl write_character
+	ldr r4, =title
+	bl output_string
 	ldr r4, =score
 	bl output_string
 	ldr r4, =line1

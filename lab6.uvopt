@@ -141,9 +141,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>373</LineNumber>
+          <LineNumber>392</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>1073743064</Address>
+          <Address>1073743296</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -152,14 +152,14 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>.\lab6.s</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\lab6\lab6.s\373</Expression>
+          <Expression>\\lab6\lab6.s\392</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>415</LineNumber>
+          <LineNumber>379</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>1073743188</Address>
+          <Address>1073743244</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -168,30 +168,30 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>.\lab6.s</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\lab6\lab6.s\415</Expression>
+          <Expression>\\lab6\lab6.s\379</Expression>
         </Bp>
         <Bp>
           <Number>2</Number>
           <Type>0</Type>
-          <LineNumber>391</LineNumber>
+          <LineNumber>380</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>0</Address>
+          <Address>1073743248</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
+          <BreakIfRCount>1</BreakIfRCount>
           <Filename>.\lab6.s</Filename>
           <ExecCommand></ExecCommand>
-          <Expression></Expression>
+          <Expression>\\lab6\lab6.s\380</Expression>
         </Bp>
       </Breakpoint>
       <MemoryWindow1>
         <Mm>
           <WinNumber>1</WinNumber>
-          <SubType>0</SubType>
-          <ItemText>0x40000294</ItemText>
+          <SubType>8</SubType>
+          <ItemText>0x40000714</ItemText>
           <AccSizeX>0</AccSizeX>
         </Mm>
       </MemoryWindow1>
