@@ -165,7 +165,7 @@ pre_game
 	str r5, [r4]
 
 	;BRICK_GENERATOR
-	;bl generate_bricks
+	bl generate_bricks
 
 
 game_loop
@@ -739,7 +739,7 @@ draw_board_init
 	ldmfd sp!, {r0, r4, lr}
 	bx lr
 	
-	;take random seed in r0
+	
 	;save random to memory
 generate_new_random
 	stmfd sp!, {r0 - r3, lr}
@@ -758,5 +758,53 @@ generate_new_random
 	
 	ldmfd sp!, {r0 - r3, lr}
 	bx lr
+	
+	
+	;pass number of bricks into r0
+generate_bricks
+	stmfd sp!, {r0 - r6, lr}
+
+	mov r6, r0
+	
+brick_gen_loop				;gen x (2:24), y (4:18)
+
+gen_x_loc
+	bl generate_new_random
+	ldr r0, =random_number
+	ldr r1, [r0] 
+	mov r0, r1
+	mov r1, #25			; upper bound
+	bl div_and_mod		; potential x in r1
+	cmp r1, #1
+	ble gen_x_loc
+	mov r4, r1
+	
+gen_y_loc				; valid x in r4
+	bl generate_new_random
+	ldr r0, =random_number
+	ldr r1, [r0]
+	mov r0, r1
+	mov r1, #19			; upper bound
+	bl div_and_mod		; potential y in r1
+	cmp r1, #3
+	ble gen_y_loc
+	mov r5, r1
+	
+	mov r1, r4
+	mov r2, r5
+	bl read_char_at_position	; check if x, y is valid	
+	cmp r0, #32			
+	bne brick_gen_loop			; if not valid, try again
+	
+	mov r0, #35
+	bl write_char_at_position	; write brick to position
+	
+	sub r6, r6, #1
+	cmp r6, #0
+	bne brick_gen_loop			; loop again for more bricks
+
+	ldmfd sp!, {r0 - r6, lr}
+	bx lr
+	
 	
 	end
