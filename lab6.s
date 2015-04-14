@@ -165,8 +165,8 @@ pre_game
 	str r5, [r4]
 
 	;BRICK_GENERATOR
-	bl generate_bricks
-
+	mov r0, #2				; initial number of bricks 
+	bl generate_bricks	
 
 game_loop
 	
@@ -740,20 +740,21 @@ draw_board_init
 	bx lr
 	
 	
-	;save random to memory
+	;save 8 - bit random to memory
 generate_new_random
 	stmfd sp!, {r0 - r3, lr}
 	
 	ldr r0, =random_number
 	ldr r1, [r0]
 	
-	and r1, r1, #0xff	;keep the last 8 bits
+	and r1, r1, #0xFF	;keep the last 8 bits
 	ldr r2, =0x19660D
 	mul r3, r1, r2
 	
 	ldr r1, =0x3C6EF35F
 	add r3, r3, r1
 	
+	and r3, r3, #0xFF
 	str r3, [r0]
 	
 	ldmfd sp!, {r0 - r3, lr}
