@@ -63,7 +63,8 @@ cursor_source = " ",0
 	ALIGN	
 
 ; MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP
-memory_map 	dcdu score
+memory_map 	dcdu title
+			dcdu score
 			dcdu line1
 			dcdu line2
 			dcdu line3
@@ -165,7 +166,7 @@ pre_game
 	str r5, [r4]
 
 	;BRICK_GENERATOR
-	mov r0, #2				; initial number of bricks 
+	mov r0, #6				; initial number of bricks 
 	bl generate_bricks	
 
 game_loop
