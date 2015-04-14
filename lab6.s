@@ -100,8 +100,6 @@ game_over				= "game over"
 ;game variables
 random_number dcdu 	0x00000000
 	ALIGN
-random_seed dcdu 	0x00000000
-	ALIGN
 
 ;mapping variables
 bomberman_x_loc 		= 2
@@ -158,8 +156,8 @@ pre_game
 	ldr r4, =0xE0008008
 	ldr r5, [r4]			;load tc
 	
-	ldr r6, =random_seed
-	str r5, [r6]			;store tc as random seed
+	ldr r6, =random_number
+	str r5, [r6]			;store tc as the first random number
 
 	ldr r4, =0xE0004004		;enable timer interrupt
 	ldr r5, [r4]
@@ -167,6 +165,8 @@ pre_game
 	str r5, [r4]
 
 	;BRICK_GENERATOR
+	;bl generate_bricks
+
 
 game_loop
 	
@@ -737,6 +737,26 @@ draw_board_init
 	bl output_string
 	
 	ldmfd sp!, {r0, r4, lr}
+	bx lr
+	
+	;take random seed in r0
+	;save random to memory
+generate_new_random
+	stmfd sp!, {r0 - r3, lr}
+	
+	ldr r0, =random_number
+	ldr r1, [r0]
+	
+	and r1, r1, #0xff	;keep the last 8 bits
+	ldr r2, =0x19660D
+	mul r3, r1, r2
+	
+	ldr r1, =0x3C6EF35F
+	add r3, r3, r1
+	
+	str r3, [r0]
+	
+	ldmfd sp!, {r0 - r3, lr}
 	bx lr
 	
 	end
