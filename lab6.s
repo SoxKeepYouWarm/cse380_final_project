@@ -166,8 +166,35 @@ pre_game
 	str r5, [r4]
 
 	;BRICK_GENERATOR
-	mov r0, #6				; initial number of bricks 
-	bl generate_bricks	
+	;mov r0, #6				; initial number of bricks 
+	;bl generate_bricks	
+
+	mov r10, #0
+	mov r5, #0
+	mov r6, #0
+	mov r7, #0
+	mov r8, #0
+	mov r9, #0
+random_debug
+	bl generate_new_random
+	ldr r1, = random_number
+	ldr r0, [r1]
+	lsr r0, r0, #28
+	mov r1, #10
+	bl div_and_mod
+	cmp r1, #0
+	addeq r5, r5, #1
+	cmp r1, #1
+	addeq r6, r6, #1
+	cmp r1, #2
+	addeq r7, r7, #1
+	cmp r1, #3
+	addeq r8, r8, #1
+	cmp r1, #4
+	addeq r9, r9, #1
+	
+	cmp r10, #1000
+	bne random_debug 
 
 game_loop
 	
@@ -444,54 +471,253 @@ done_moving_bomberman
 	
 	
 move_enemy_one
-	stmfd sp!, {r0 - r2, lr}
+	stmfd sp!, {r0 - r9, lr}
 	
-	ldr r0, =enemy_one_x_loc
-	ldr r1, =enemy_one_y_loc
-	ldr r2, =enemy_one_direction
+	ldr r4, =enemy_one_direction
+	ldr r5, =enemy_one_x_loc
+	ldr r6, =enemy_one_y_loc
 	
-	;handling movement mechanics 
-	;and mapping movement to memory
+	ldrb r7, [r4]
+	ldrb r8, [r5]
+	ldrb r9, [r6]
 	
-	mov r0, #120
-	mov r1, #0; new x coordinate
-	mov r2, #0; new y coordinate
+	mov r0, #32
+	mov r1, r8			; clear old position
+	mov r2, r9	
+	
 	bl write_char_at_position
+	
+enemy_one_move_loop
+	bl generate_new_random
+	ldr r3, =random_number
+	ldr r0, [r3]
+	mov r1, #4
+	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
+	
+	mov r3, r1
+	
+	cmp r7, #0		; move up?
+	moveq r1, r8
+	subeq r2, r9, #1	; negative vertical axis
+	
+	cmp r7, #1			; move left?
+	subeq r1, r8, #1
+	moveq r2, r9
+	
+	cmp r7, #2		; move right?
+	addeq r1, r8, #1
+	moveq r2, r9
+	
+	cmp r7, #3		; move down?
+	moveq r1, r8
+	addeq r2, r9, #1
+	
+	
+	bl read_char_at_position		;returns char at move destination to r0
+	cmp r0, #32			; empty space?
+	beq can_move_enemy_one
+	cmp r0, #90			; wall?
+	beq cant_move_enemy_one
+	cmp r0, #35			; brick?
+	beq cant_move_enemy_one
+	cmp r0, #111		; bomb?
+	beq cant_move_enemy_one
+	cmp r0, #45			; bomb blast horizontal 
+	beq enemy_one_died
+	cmp r0, #124		; bomb blast vertical
+	beq enemy_one_died
+	cmp r0, #120		; enemy
+	beq cant_move_enemy_one
+	cmp r0, #43			; super enemy
+	beq cant_move_enemy_one
+	
+can_move_enemy_one
+	mov r0, #120
+	bl write_char_at_position
+	b done_moving_enemy_one
+	
+cant_move_enemy_one
+	mov r0, #120
+	mov r1, r8
+	mov r2, r9
+	bl write_char_at_position
+	b done_moving_enemy_one
+	
+enemy_one_died
+	
+	
+done_moving_enemy_one
+	strb r0, [r4]
+	strb r1, [r5]
+	strb r2, [r6]
 	ldmfd sp!, {r0 - r2, lr}
 	bx lr
 	
 move_enemy_two
-	stmfd sp!, {r0 - r2, lr}
+	stmfd sp!, {r0 - r9, lr}
 	
-	ldr r0, =enemy_two_x_loc
-	ldr r1, =enemy_two_y_loc
-	ldr r2, =enemy_two_direction
+	ldr r4, =enemy_two_direction
+	ldr r5, =enemy_two_x_loc
+	ldr r6, =enemy_two_y_loc
 	
-	;handling movement mechanics 
-	;and mapping movement to memory	
+	ldrb r7, [r4]
+	ldrb r8, [r5]
+	ldrb r9, [r6]
 	
-	mov r0, #120
-	mov r1, #0; new x coordinate
-	mov r2, #0; new y coordinate
+	mov r0, #32
+	mov r1, r8			; clear old position
+	mov r2, r9	
+	
 	bl write_char_at_position
+	
+enemy_two_move_loop
+	bl generate_new_random
+	ldr r3, =random_number
+	ldr r0, [r3]
+	mov r1, #4
+	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
+	
+	mov r3, r1
+	
+	cmp r7, #0		; move up?
+	moveq r1, r8
+	subeq r2, r9, #1	; negative vertical axis
+	
+	cmp r7, #1			; move left?
+	subeq r1, r8, #1
+	moveq r2, r9
+	
+	cmp r7, #2		; move right?
+	addeq r1, r8, #1
+	moveq r2, r9
+	
+	cmp r7, #3		; move down?
+	moveq r1, r8
+	addeq r2, r9, #1
+	
+	
+	bl read_char_at_position		;returns char at move destination to r0
+	cmp r0, #32			; empty space?
+	beq can_move_enemy_two
+	cmp r0, #90			; wall?
+	beq cant_move_enemy_two
+	cmp r0, #35			; brick?
+	beq cant_move_enemy_two
+	cmp r0, #111		; bomb?
+	beq cant_move_enemy_two
+	cmp r0, #45			; bomb blast horizontal 
+	beq enemy_two_died
+	cmp r0, #124		; bomb blast vertical
+	beq enemy_two_died
+	cmp r0, #120		; enemy
+	beq cant_move_enemy_two
+	cmp r0, #43			; super enemy
+	beq cant_move_enemy_two
+	
+can_move_enemy_two
+	mov r0, #120
+	bl write_char_at_position
+	b done_moving_enemy_two
+	
+cant_move_enemy_two
+	mov r0, #120
+	mov r1, r8
+	mov r2, r9
+	bl write_char_at_position
+	b done_moving_enemy_two
+	
+enemy_two_died
+	
+	
+done_moving_enemy_two
+	strb r0, [r4]
+	strb r1, [r5]
+	strb r2, [r6]
 	ldmfd sp!, {r0 - r2, lr}
 	bx lr
 	
+	
+	
 move_enemy_super
-	stmfd sp!, {r0 - r2, lr}
+	stmfd sp!, {r0 - r9, lr}
 	
-	ldr r0, =enemy_super_x_loc
-	ldr r1, =enemy_super_y_loc
-	ldr r2, =enemy_super_direction
+	ldr r4, =enemy_super_direction
+	ldr r5, =enemy_super_x_loc
+	ldr r6, =enemy_super_y_loc
 	
-	;handling movement mechanics 
-	;and mapping movement to memory	
+	ldrb r7, [r4]
+	ldrb r8, [r5]
+	ldrb r9, [r6]
 	
-	mov r0, #43
-	mov r1, #0; new x coordinate
-	mov r2, #0; new y coordinate
+	mov r0, #32
+	mov r1, r8			; clear old position
+	mov r2, r9	
+	
 	bl write_char_at_position
 	
+enemy_super_move_loop
+	bl generate_new_random
+	ldr r3, =random_number
+	ldr r0, [r3]
+	mov r1, #4
+	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
+	
+	mov r3, r1
+	
+	cmp r7, #0		; move up?
+	moveq r1, r8
+	subeq r2, r9, #1	; negative vertical axis
+	
+	cmp r7, #1			; move left?
+	subeq r1, r8, #1
+	moveq r2, r9
+	
+	cmp r7, #2		; move right?
+	addeq r1, r8, #1
+	moveq r2, r9
+	
+	cmp r7, #3		; move down?
+	moveq r1, r8
+	addeq r2, r9, #1
+	
+	
+	bl read_char_at_position		;returns char at move destination to r0
+	cmp r0, #32			; empty space?
+	beq can_move_enemy_super
+	cmp r0, #90			; wall?
+	beq cant_move_enemy_super
+	cmp r0, #35			; brick?
+	beq cant_move_enemy_super
+	cmp r0, #111		; bomb?
+	beq cant_move_enemy_super
+	cmp r0, #45			; bomb blast horizontal 
+	beq enemy_super_died
+	cmp r0, #124		; bomb blast vertical
+	beq enemy_super_died
+	cmp r0, #120		; enemy
+	beq cant_move_enemy_super
+	cmp r0, #43			; super enemy
+	beq cant_move_enemy_super
+	
+can_move_enemy_super
+	mov r0, #120
+	bl write_char_at_position
+	b done_moving_enemy_super
+	
+cant_move_enemy_super
+	mov r0, #120
+	mov r1, r8
+	mov r2, r9
+	bl write_char_at_position
+	b done_moving_enemy_super
+	
+enemy_super_died
+	
+	
+done_moving_enemy_super
+	strb r0, [r4]
+	strb r1, [r5]
+	strb r2, [r6]
 	ldmfd sp!, {r0 - r2, lr}
 	bx lr
 	
@@ -747,15 +973,13 @@ generate_new_random
 	
 	ldr r0, =random_number
 	ldr r1, [r0]
-	
-	and r1, r1, #0xFF	;keep the last 8 bits
-	ldr r2, =0x19660D
+	ldr r2, =0x15A4E35
 	mul r3, r1, r2
 	
-	ldr r1, =0x3C6EF35F
-	add r3, r3, r1
+	ldr r2, =0x34865
+	add r3, r3, r2
 	
-	and r3, r3, #0xFF
+	;and r3, r3, #0xFF
 	str r3, [r0]
 	
 	ldmfd sp!, {r0 - r3, lr}
