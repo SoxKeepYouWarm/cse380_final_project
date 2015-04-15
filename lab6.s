@@ -501,7 +501,7 @@ done_moving_bomberman
 	
 	
 move_enemy_one
-	stmfd sp!, {r0 - r9, lr}
+	stmfd sp!, {r0 - r10, lr}
 	
 	ldr r4, =enemy_one_direction
 	ldr r5, =enemy_one_x_loc
@@ -524,7 +524,16 @@ enemy_one_move_loop
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
 	
-	mov r3, r1
+	mov r10, r1		; r10 holds new direction, r7 holds old direction
+	
+	bl generate_new_random
+	ldr r3, =random_number
+	ldr r0, [r3]
+	mov r1, #4
+	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
+	
+	cmp r1, #3	
+	moveq r7, r10		; 1 in 4 chance to choose new direction
 	
 	cmp r7, #0		; move up?
 	moveq r1, r8
@@ -567,11 +576,19 @@ can_move_enemy_one
 	b done_moving_enemy_one
 	
 cant_move_enemy_one
-	mov r0, #120
-	mov r1, r8
-	mov r2, r9
-	bl write_char_at_position
-	b done_moving_enemy_one
+	cmp r7, #0
+	moveq r7, #3		; invert current direction
+	
+	cmp r7, #1
+	moveq r7, #2
+	
+	cmp r7, #2
+	moveq r7, #1
+	
+	cmp r7, #3
+	moveq r7, #0
+	
+	b enemy_one_move_loop	; try moving again with new base direction
 	
 enemy_one_died
 	
@@ -584,7 +601,7 @@ done_moving_enemy_one
 	bx lr
 	
 move_enemy_two
-	stmfd sp!, {r0 - r9, lr}
+	stmfd sp!, {r0 - r10, lr}
 	
 	ldr r4, =enemy_two_direction
 	ldr r5, =enemy_two_x_loc
@@ -607,7 +624,16 @@ enemy_two_move_loop
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
 	
-	mov r3, r1
+	mov r10, r1		; r10 holds new direction, r7 holds old direction
+	
+	bl generate_new_random
+	ldr r3, =random_number
+	ldr r0, [r3]
+	mov r1, #4
+	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
+	
+	cmp r1, #3	
+	moveq r7, r10		; 1 in 4 chance to choose new direction
 	
 	cmp r7, #0		; move up?
 	moveq r1, r8
@@ -650,11 +676,19 @@ can_move_enemy_two
 	b done_moving_enemy_two
 	
 cant_move_enemy_two
-	mov r0, #120
-	mov r1, r8
-	mov r2, r9
-	bl write_char_at_position
-	b done_moving_enemy_two
+	cmp r7, #0
+	moveq r7, #3		; invert current direction
+	
+	cmp r7, #1
+	moveq r7, #2
+	
+	cmp r7, #2
+	moveq r7, #1
+	
+	cmp r7, #3
+	moveq r7, #0
+	
+	b enemy_two_move_loop	; try moving again with new base direction
 	
 enemy_two_died
 	
@@ -663,13 +697,13 @@ done_moving_enemy_two
 	strb r0, [r4]
 	strb r1, [r5]
 	strb r2, [r6]
-	ldmfd sp!, {r0 - r2, lr}
+	ldmfd sp!, {r0 - r10, lr}
 	bx lr
 	
 	
 	
 move_enemy_super
-	stmfd sp!, {r0 - r9, lr}
+	stmfd sp!, {r0 - r10, lr}
 	
 	ldr r4, =enemy_super_direction
 	ldr r5, =enemy_super_x_loc
@@ -692,7 +726,16 @@ enemy_super_move_loop
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
 	
-	mov r3, r1
+	mov r10, r1		; r10 holds new direction, r7 holds old direction
+	
+	bl generate_new_random
+	ldr r3, =random_number
+	ldr r0, [r3]
+	mov r1, #4
+	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
+	
+	cmp r1, #3	
+	moveq r7, r10		; 1 in 4 chance to choose new direction
 	
 	cmp r7, #0		; move up?
 	moveq r1, r8
@@ -735,11 +778,19 @@ can_move_enemy_super
 	b done_moving_enemy_super
 	
 cant_move_enemy_super
-	mov r0, #120
-	mov r1, r8
-	mov r2, r9
-	bl write_char_at_position
-	b done_moving_enemy_super
+	cmp r7, #0
+	moveq r7, #3		; invert current direction
+	
+	cmp r7, #1
+	moveq r7, #2
+	
+	cmp r7, #2
+	moveq r7, #1
+	
+	cmp r7, #3
+	moveq r7, #0
+	
+	b enemy_super_move_loop	; try moving again with new base direction
 	
 enemy_super_died
 	
@@ -748,7 +799,7 @@ done_moving_enemy_super
 	strb r0, [r4]
 	strb r1, [r5]
 	strb r2, [r6]
-	ldmfd sp!, {r0 - r2, lr}
+	ldmfd sp!, {r0 - r10, lr}
 	bx lr
 	
 	
