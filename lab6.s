@@ -143,11 +143,11 @@ lab6
 	STRB r0, [r4]
 	bl uart_init	
 	bl interrupt_init
-	;ldr r4, =prompt
-	;bl output_string
+	ldr r4, =prompt
+	bl output_string
 	
-	ldr r4, =0xE0008004		;enable timer interrupt
-	ldr r5, [r4]
+	ldr r4, =0xE0008004		; enable timer 1 interrupt
+	ldr r5, [r4]			; used to generate random seed
 	orr r5, r5, #1
 	str r5, [r4]
 	
@@ -169,22 +169,24 @@ pre_game
 	mov r5, #32
 	strb r5, [r4, #1]
 	strb r5, [r4, #23]
-	
+
 
 	ldr r4, =0xE0008008
-	ldr r5, [r4]			;load tc
+	ldr r5, [r4]			; load tc
 	
 	ldr r6, =random_number
-	str r5, [r6]			;store tc as the first random number
+	str r5, [r6]			; store tc as the first random number
 
-	ldr r4, =0xE0004004		;enable timer interrupt
-	ldr r5, [r4]
+	;BRICK_GENERATOR
+	mov r0, #6				; initial number of bricks 
+	bl generate_bricks
+
+	ldr r4, =0xE0004004		; enable timer 0 interrupt
+	ldr r5, [r4]			; used for timer interrupt
 	orr r5, r5, #1
 	str r5, [r4]
 
-	;BRICK_GENERATOR
-	;mov r0, #6				; initial number of bricks 
-	;bl generate_bricks	
+	
 
 	mov r10, #0
 	mov r5, #0
@@ -414,8 +416,8 @@ move_characters
 	
 	bl move_bomberman
 	bl move_enemy_one
-	bl move_enemy_two
-	bl move_enemy_super
+	;bl move_enemy_two
+	;bl move_enemy_super
 	
 	ldmfd sp!, {lr}
 	bx lr
@@ -1111,6 +1113,8 @@ gen_x_loc
 	ldr r0, =random_number
 	ldr r1, [r0] 
 	mov r0, r1
+	bic r0, r0, #0xFF000000
+	bic r0, r0, #0x00FF0000
 	mov r1, #25			; upper bound
 	bl div_and_mod		; potential x in r1
 	cmp r1, #1
@@ -1122,6 +1126,8 @@ gen_y_loc				; valid x in r4
 	ldr r0, =random_number
 	ldr r1, [r0]
 	mov r0, r1
+	bic r0, r0, #0xFF000000
+	bic r0, r0, #0x00FF0000
 	mov r1, #19			; upper bound
 	bl div_and_mod		; potential y in r1
 	cmp r1, #3
@@ -1136,6 +1142,13 @@ gen_y_loc				; valid x in r4
 	
 	mov r0, #35
 	bl write_char_at_position	; write brick to position
+
+	ldr r3, =memory_map
+	sub r1, r1, #1				; alter x, y for memory access 
+	sub r2, r2, #1
+
+	ldr r4, [r3, r2, lsl #2]
+	strb r0, [r4, r1]
 	
 	sub r6, r6, #1
 	cmp r6, #0
