@@ -113,7 +113,7 @@ enemy_one_x_loc			= 24
 	ALIGN
 enemy_one_y_loc			= 4
 	ALIGN
-enemy_one_direction		= 0
+enemy_one_direction		= 1
 	ALIGN
 enemy_two_x_loc 		= 2
 	ALIGN	
@@ -125,7 +125,7 @@ enemy_super_x_loc		= 24
 	ALIGN
 enemy_super_y_loc		= 18
 	ALIGN
-enemy_super_direction	= 0
+enemy_super_direction	= 1
 	ALIGN
 		
 
@@ -941,7 +941,7 @@ clear_loop						; loop to clear escape sequence in memory
 	 ;take x and y coord in r1, r2. 
 	 ;returns char at position in r0
 read_char_at_position
-	stmfd sp!, {r3 - r5, lr}
+	stmfd sp!, {r1 - r5, lr}
 	
 	;is the character bomberman?
 check_for_bomberman	
@@ -1005,11 +1005,13 @@ check_for_enemy_super
 	
 check_memory_map
 	ldr r4, =memory_map
+	sub r2, r2, #1
 	ldr r5, [r4, r2, lsl #2]	; line address of y coord
+	sub r1, r1, #1
 	ldrb r0, [r5, r1]			; char at y coord shifted by x
 	
 read_char_at_position_done	
-	ldmfd sp!, {r3 - r5, lr}
+	ldmfd sp!, {r1 - r5, lr}
 	bx lr
 	
 draw_board_init
