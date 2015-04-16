@@ -159,6 +159,17 @@ pre_game
 	bne pre_game
 		
 	bl draw_board_init
+	
+	ldr r4, =line2			; clear escape sequence 
+	mov r5, #32				; handled chars from memory
+	strb r5, [r4, #1]
+	strb r5, [r4, #23]
+	
+	ldr r4, =line16
+	mov r5, #32
+	strb r5, [r4, #1]
+	strb r5, [r4, #23]
+	
 
 	ldr r4, =0xE0008008
 	ldr r5, [r4]			;load tc
@@ -402,9 +413,9 @@ move_characters
 	stmfd sp!, {lr}
 	
 	bl move_bomberman
-	;bl move_enemy_one
-	;bl move_enemy_two
-	;bl move_enemy_super
+	bl move_enemy_one
+	bl move_enemy_two
+	bl move_enemy_super
 	
 	ldmfd sp!, {lr}
 	bx lr
@@ -521,6 +532,10 @@ enemy_one_move_loop
 	bl generate_new_random
 	ldr r3, =random_number
 	ldr r0, [r3]
+	
+	bic r0, r0, #0xFF000000
+	bic r0, r0, #0xFF0000
+	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
 	
@@ -529,6 +544,10 @@ enemy_one_move_loop
 	bl generate_new_random
 	ldr r3, =random_number
 	ldr r0, [r3]
+	
+	bic r0, r0, #0xFF000000
+	bic r0, r0, #0xFF0000
+	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
 	
@@ -594,10 +613,10 @@ enemy_one_died
 	
 	
 done_moving_enemy_one
-	strb r0, [r4]
+	strb r7, [r4]			; stores direction, x, y
 	strb r1, [r5]
 	strb r2, [r6]
-	ldmfd sp!, {r0 - r2, lr}
+	ldmfd sp!, {r0 - r10, lr}
 	bx lr
 	
 move_enemy_two
@@ -621,6 +640,10 @@ enemy_two_move_loop
 	bl generate_new_random
 	ldr r3, =random_number
 	ldr r0, [r3]
+	
+	bic r0, r0, #0xFF000000
+	bic r0, r0, #0xFF0000
+	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
 	
@@ -629,6 +652,10 @@ enemy_two_move_loop
 	bl generate_new_random
 	ldr r3, =random_number
 	ldr r0, [r3]
+	
+	bic r0, r0, #0xFF000000
+	bic r0, r0, #0xFF0000
+	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
 	
@@ -694,7 +721,7 @@ enemy_two_died
 	
 	
 done_moving_enemy_two
-	strb r0, [r4]
+	strb r7, [r4]			; stores direction, x, y
 	strb r1, [r5]
 	strb r2, [r6]
 	ldmfd sp!, {r0 - r10, lr}
@@ -723,6 +750,10 @@ enemy_super_move_loop
 	bl generate_new_random
 	ldr r3, =random_number
 	ldr r0, [r3]
+	
+	bic r0, r0, #0xFF000000
+	bic r0, r0, #0xFF0000
+	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
 	
@@ -731,6 +762,10 @@ enemy_super_move_loop
 	bl generate_new_random
 	ldr r3, =random_number
 	ldr r0, [r3]
+	
+	bic r0, r0, #0xFF000000
+	bic r0, r0, #0xFF0000
+	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
 	
@@ -796,7 +831,7 @@ enemy_super_died
 	
 	
 done_moving_enemy_super
-	strb r0, [r4]
+	strb r7, [r4]			; stores direction, x, y
 	strb r1, [r5]
 	strb r2, [r6]
 	ldmfd sp!, {r0 - r10, lr}
