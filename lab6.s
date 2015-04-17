@@ -144,7 +144,7 @@ lab6
 	bl uart_init	
 	bl interrupt_init
 	ldr r4, =prompt
-	bl output_string
+	;bl output_string
 	
 	ldr r4, =0xE0008004		; enable timer 1 interrupt
 	ldr r5, [r4]			; used to generate random seed
@@ -198,8 +198,10 @@ random_debug
 	bl generate_new_random
 	ldr r1, = random_number
 	ldr r0, [r1]
-	lsr r0, r0, #28
-	mov r1, #10
+	lsr r0, r0, #16
+	;bic r0, r0, #0xFF000000
+	;bic r0, r0, #0x00FF0000
+	mov r1, #4
 	bl div_and_mod
 	cmp r1, #0
 	addeq r5, r5, #1
@@ -416,8 +418,8 @@ move_characters
 	
 	bl move_bomberman
 	bl move_enemy_one
-	;bl move_enemy_two
-	;bl move_enemy_super
+	bl move_enemy_two
+	bl move_enemy_super
 	
 	ldmfd sp!, {lr}
 	bx lr
@@ -534,9 +536,9 @@ enemy_one_move_loop
 	bl generate_new_random
 	ldr r3, =random_number
 	ldr r0, [r3]
-	
-	bic r0, r0, #0xFF000000
-	bic r0, r0, #0xFF0000
+	lsr r0, r0, #16
+	;bic r0, r0, #0xFF000000
+	;bic r0, r0, #0xFF0000
 	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
@@ -546,9 +548,10 @@ enemy_one_move_loop
 	bl generate_new_random
 	ldr r3, =random_number
 	ldr r0, [r3]
-	
-	bic r0, r0, #0xFF000000
-	bic r0, r0, #0xFF0000
+	lsr r0, r0, #16
+
+	;bic r0, r0, #0xFF000000
+	;bic r0, r0, #0xFF0000
 	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
@@ -642,9 +645,10 @@ enemy_two_move_loop
 	bl generate_new_random
 	ldr r3, =random_number
 	ldr r0, [r3]
+	lsr r0, r0, #16	
 	
-	bic r0, r0, #0xFF000000
-	bic r0, r0, #0xFF0000
+	;bic r0, r0, #0xFF000000
+	;bic r0, r0, #0xFF0000
 	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
@@ -654,9 +658,10 @@ enemy_two_move_loop
 	bl generate_new_random
 	ldr r3, =random_number
 	ldr r0, [r3]
+	lsr r0, r0, #16
 	
-	bic r0, r0, #0xFF000000
-	bic r0, r0, #0xFF0000
+	;bic r0, r0, #0xFF000000
+	;bic r0, r0, #0xFF0000
 	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
@@ -752,9 +757,10 @@ enemy_super_move_loop
 	bl generate_new_random
 	ldr r3, =random_number
 	ldr r0, [r3]
+	lsr r0, r0, #16
 	
-	bic r0, r0, #0xFF000000
-	bic r0, r0, #0xFF0000
+	;bic r0, r0, #0xFF000000
+	;bic r0, r0, #0xFF0000
 	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
@@ -764,9 +770,10 @@ enemy_super_move_loop
 	bl generate_new_random
 	ldr r3, =random_number
 	ldr r0, [r3]
+	lsr r0, r0, #16
 	
-	bic r0, r0, #0xFF000000
-	bic r0, r0, #0xFF0000
+	;bic r0, r0, #0xFF000000
+	;bic r0, r0, #0xFF0000
 	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
@@ -1113,8 +1120,10 @@ gen_x_loc
 	ldr r0, =random_number
 	ldr r1, [r0] 
 	mov r0, r1
-	bic r0, r0, #0xFF000000
-	bic r0, r0, #0x00FF0000
+	lsr r0, r0, #16
+
+	;bic r0, r0, #0xFF000000
+	;bic r0, r0, #0x00FF0000
 	mov r1, #25			; upper bound
 	bl div_and_mod		; potential x in r1
 	cmp r1, #1
@@ -1126,8 +1135,10 @@ gen_y_loc				; valid x in r4
 	ldr r0, =random_number
 	ldr r1, [r0]
 	mov r0, r1
-	bic r0, r0, #0xFF000000
-	bic r0, r0, #0x00FF0000
+	lsr r0, r0, #16
+	
+	;bic r0, r0, #0xFF000000
+	;bic r0, r0, #0x00FF0000
 	mov r1, #19			; upper bound
 	bl div_and_mod		; potential y in r1
 	cmp r1, #3
@@ -1164,19 +1175,77 @@ gen_y_loc				; valid x in r4
 ;////////////////////////////////////////////////////////////////	
 ;////////////////////////////////////////////////////////////////		
 	
-	;save 8 - bit random to memory
+	;save 16 - bit random to memory
 generate_new_random
 	stmfd sp!, {r0 - r3, lr}
 	
 	ldr r0, =random_number
 	ldr r1, [r0]
-	ldr r2, =0x15A4E35
+	
+	ldr r2, =0xE2842335
 	mul r3, r1, r2
 	
-	ldr r2, =0x34865
+	ldr r2, =0x62626355
 	add r3, r3, r2
 	
-	;and r3, r3, #0xFF
+random_layer_two	; first layer random number in r3
+	
+	mov r0, r3
+	lsr r0, r0, #16
+	mov r1, #4
+	bl div_and_mod		; random (0 : 3)
+	
+	cmp r1, #0
+	beq random_layer_two_generator_one
+	cmp r1, #1
+	beq random_layer_two_generator_two
+	cmp r1, #2
+	beq random_layer_two_generator_three
+	cmp r1, #3 
+	beq random_layer_two_generator_four
+	
+random_layer_two_generator_one
+	mov r1, r3
+	
+	ldr r2, =0xF185A7B1
+	mul r3, r1, r2
+	
+	ldr r2, =0x295C7A1B
+	add r3, r3, r2
+
+	b random_generator_done
+random_layer_two_generator_two
+	mov r1, r3
+	
+	ldr r2, =0x82E278AB
+	mul r3, r1, r2
+	
+	ldr r2, =0x825EBA73
+	add r3, r3, r2
+	
+	b random_generator_done
+random_layer_two_generator_three
+	mov r1, r3
+	
+	ldr r2, =0x25174927
+	mul r3, r1, r2
+	
+	ldr r2, =0xA287B4D7
+	add r3, r3, r2
+	
+	b random_generator_done
+random_layer_two_generator_four
+	mov r1, r3
+	
+	ldr r2, =0xC4728D75
+	mul r3, r1, r2
+	
+	ldr r2, =0x398547AD
+	add r3, r3, r2
+	
+random_generator_done		; second layer random number in r3
+	
+	ldr r0, =random_number
 	str r3, [r0]
 	
 	ldmfd sp!, {r0 - r3, lr}
