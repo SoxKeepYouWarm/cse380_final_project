@@ -158,6 +158,8 @@ bomb_set				= 0
 	ALIGN
 bomb_input				= 0
 	ALIGN
+bomb_exploding			= 0
+	ALIGN
 bomb_timer				= 0
 	ALIGN
 bomb_x_loc				= 0 
@@ -442,6 +444,129 @@ read_data_handler_exit
 
 handle_bomb
 	stmfd sp!, {lr}
+
+	ldr r4, =bomb_exploding
+	ldrb r5, [r4]
+	cmp r5, #1
+	bne bomb_not_exploding		
+	
+	; remove bomb explosion
+	; unset bomb_exploding
+	mov r5, #0
+	strb r5, [r4]
+	
+	ldr r3, =bomb_x_loc
+	ldr r4, =bomb_y_loc
+	
+	; check above
+	ldrb r1, [r3]
+	ldrb r2, [r4]
+	add r2, r2, #1
+	
+	bl read_char_at_position
+	cmp r0, #124				; vertical bomb explosion
+	mov r0, #32
+	bleq write_char_at_position		; write " " to explosion position
+	
+	add r2, r2, #1					; check 2 above
+	bl read_char_at_position
+	cmp r0, #124
+	mov r0, #32
+	bleq write_char_at_position		; write " " to explosion position
+	
+	sub r2, r2, #2		; back to bomb origin
+	
+	; check left
+	sub r1, r1, #1
+	bl read_char_at_position
+	cmp r0, #45
+	mov r0, #32
+	bleq write_char_at_position		; write " " to explosion position
+	
+	sub r1, r1, #1					; check 2 left
+	bl read_char_at_position
+	cmp r0, #45
+	mov r0, #32
+	bleq write_char_at_position		; write " " to explosion position
+	
+	sub r1, r1, #1					; check 3 left
+	bl read_char_at_position
+	cmp r0, #45
+	mov r0, #32
+	bleq write_char_at_position		; write " " to explosion position
+	
+	sub r1, r1, #1					; check 4 left
+	bl read_char_at_position
+	cmp r0, #45
+	mov r0, #32
+	bleq write_char_at_position		; write " " to explosion position
+	
+	
+	add r1, r1, #4		; back to bomb origin
+	
+	; check right
+	add r1, r1, #1
+	bl read_char_at_position
+	cmp r0, #45
+	mov r0, #32
+	bleq write_char_at_position		; write " " to explosion position
+	
+	add r1, r1, #1					; check 2 right
+	bl read_char_at_position
+	cmp r0, #45
+	mov r0, #32
+	bleq write_char_at_position		; write " " to explosion position
+	
+	add r1, r1, #1					; check 3 right
+	bl read_char_at_position
+	cmp r0, #45
+	mov r0, #32
+	bleq write_char_at_position		; write " " to explosion position
+	
+	add r1, r1, #1					; check 4 right
+	bl read_char_at_position
+	cmp r0, #45
+	mov r0, #32
+	bleq write_char_at_position		; write " " to explosion position
+	
+	
+	sub r1, r1, #4		; back to bomb origin
+	
+	; check below
+	add r2, r2, #1					; check 1 below
+	bl read_char_at_position
+	cmp r0, #45
+	mov r0, #32
+	bleq write_char_at_position		; write " " to explosion position
+	
+	add r2, r2, #1
+	bl read_char_at_position		; check 2 below
+	cmp r0, #45
+	mov r0, #32
+	bleq write_char_at_position		; write " " to explosion position
+	
+	
+bomb_not_exploding
+
+	ldr r4, =bomb_set
+	ldrb r5, [r4]
+	cmp r5, #1
+	bne handle_bomb_done		; is bomb set?
+	
+	ldr r4, =bomb_timer
+	ldrb r5, [r4]
+	sub r5, r5, #1
+	cmp r5, #0
+	bne handle_bomb_done		; is bomb ready to blow?
+	
+	ldr r4, =bomb_exploding		; bomb is exploding
+	mov r5, #1
+	strb r5, [r4]
+	
+	; print bomb explosion
+	
+	
+handle_bomb_done
 
 	ldmfd sp!, {lr}
 	bx lr
