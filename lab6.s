@@ -25,7 +25,7 @@ score =  	"   Time:120 Score:0000   \n",13,0
 	ALIGN
 line1 =  	"ZZZZZZZZZZZZZZZZZZZZZZZZZ\n",13,0
 	ALIGN
-line2 =  	"ZB                     xZ\n",13,0
+line2 =  	"Z                      xZ\n",13,0
 	ALIGN
 line3 =  	"Z Z Z Z Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
@@ -63,7 +63,7 @@ cursor_source = " ",0
 	ALIGN	
 
 ; MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP
-memory_map 	dcdu title
+memory_map 	dcd	 title
 			dcdu score
 			dcdu line1
 			dcdu line2
@@ -87,6 +87,30 @@ memory_map 	dcdu title
 	
 ; MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP 
 
+level_1_timing dcd		0x59728379
+	ALIGN
+level_2_timing dcd		0x00000000
+	ALIGN
+level_3_timing dcd		0x00000000
+	ALIGN
+level_4_timing dcd 		0x00000000
+	ALIGN
+level_5_timing dcd 		0x00000000
+	ALIGN
+level_6_timing dcd 		0x00000000
+	ALIGN
+level_7_timing dcd 		0x00000000
+	ALIGN
+
+level_timings 	dcd level_1_timing
+				dcd level_2_timing
+				dcd level_3_timing
+				dcd level_4_timing
+				dcd level_5_timing
+				dcd level_6_timing
+				dcd level_7_timing
+	ALIGN
+		
 
 	;my variables
 prompt 		= 	"Welcome to our final project,\ncontrol your character movement with\nwasd, and place bombs with spacebar\npause the game by pressing the hardware key",10
@@ -101,8 +125,11 @@ game_over				= "game over"
 ;game variables
 random_number dcdu 	0x00000000
 	ALIGN
+current_level = 1
+	ALIGN
 
 ;mapping variables
+
 bomberman_x_loc 		= 2
 	ALIGN
 bomberman_y_loc 		= 4
@@ -127,7 +154,16 @@ enemy_super_y_loc		= 18
 	ALIGN
 enemy_super_direction	= 1
 	ALIGN
-		
+bomb_set				= 0
+	ALIGN
+bomb_input				= 0
+	ALIGN
+bomb_timer				= 0
+	ALIGN
+bomb_x_loc				= 0 
+	ALIGN
+bomb_y_loc				= 0
+	ALIGN
 
 ;////////////////////////////////////////////////////////////////
 ;////////////////////////////////////////////////////////////////		
@@ -158,6 +194,14 @@ pre_game
 	cmp r5, #1
 	bne pre_game
 		
+	ldr r4, =0xE0008008
+	ldr r5, [r4]			; load tc
+	
+	ldr r6, =random_number
+	str r5, [r6]			; store tc as the first random number
+	
+level_init
+	
 	bl draw_board_init
 	
 	ldr r4, =line2			; clear escape sequence 
@@ -165,20 +209,18 @@ pre_game
 	strb r5, [r4, #1]
 	strb r5, [r4, #23]
 	
-	ldr r4, =line16
+	ldr r4, =line16			; fixes memory
 	mov r5, #32
 	strb r5, [r4, #1]
 	strb r5, [r4, #23]
 
-
-	ldr r4, =0xE0008008
-	ldr r5, [r4]			; load tc
 	
-	ldr r6, =random_number
-	str r5, [r6]			; store tc as the first random number
-
-	;BRICK_GENERATOR
-	mov r0, #6				; initial number of bricks 
+	ldr r4, =current_level	;BRICK_GENERATOR
+	ldrb r5, [r4]
+	sub r5, r5, #1
+	mov r4, #3
+	mul r6, r5, r4	
+	add r0, r6, #10 	; initial number of bricks 
 	bl generate_bricks
 
 	ldr r4, =0xE0004004		; enable timer 0 interrupt
@@ -297,7 +339,8 @@ FIQ_Exit
 		
 timer_one_mr_one_handler
 	stmfd sp!, {r0, r1, lr}
-			
+	
+	bl handle_bomb
 	bl move_characters
 	
 	ldr r0, =termination_condition
@@ -345,21 +388,24 @@ pre_read_done
 main_game_read_data_handler
 	stmfd sp!, {r0 - r2, lr}
 	
-	LDR r2, =0xE000C000	;get character
-	LDRB r0, [r2]
+	ldr r2, =0xE000C000	;get character
+	ldrb r0, [r2]
 
 
-	CMP r0, #119 ; input w - set direction up
-	BEQ set_direction_up
+	cmp r0, #119 ; input w - set direction up
+	beq set_direction_up
 
-	CMP r0, #97	; input a - set direction left
-	BEQ set_direction_left
+	cmp r0, #97	; input a - set direction left
+	beq set_direction_left
 
-	CMP r0, #115	; input s - set direction right
-	BEQ set_direction_right
+	cmp r0, #115	; input s - set direction right
+	beq set_direction_right
 
-	CMP r0, #100	; input d - set direction down
-	BEQ set_direction_down
+	cmp r0, #100	; input d - set direction down
+	beq set_direction_down
+	
+	cmp r0, #32		; input *space* - set bomb, unset
+	beq set_bomb_input
 		
 	B read_data_handler_exit
 
@@ -395,6 +441,18 @@ set_direction_down
 
 	b read_data_handler_exit
 	
+set_bomb_input
+
+	ldr r0, =bomberman_direction
+	mov r1, #0
+	strb r1, [r0]
+	
+	ldr r0, =bomb_input
+	mov r1, #1
+	strb r1, [r0]
+	
+	b read_data_handler_exit
+	
 read_data_handler_exit
     ldmfd sp!, {r0 - r2, lr}
     bx lr
@@ -412,6 +470,12 @@ read_data_handler_exit
 ;////////////////////////////////////////////////////////////////	
 ;////////////////////////////////////////////////////////////////
 
+
+handle_bomb
+	stmfd sp!, {lr}
+
+	ldmfd sp!, {lr}
+	bx lr
 
 move_characters
 	stmfd sp!, {lr}
@@ -439,11 +503,14 @@ move_bomberman
 	mov r1, r8			; clear old position
 	mov r2, r9	
 
-	cmp r7, #32
-	beq done_moving_bomberman
+	ldr r3, =bomb_input			;bomb should be set
+	ldrb r4, [r3]
+	cmp r4, #1			; bomb setup code
+	beq bomberman_drops_bomb
 	
-	;handling movement mechanics 
-	;and mapping movement to memory
+	
+	cmp r7, #32					; no direction input
+	beq done_moving_bomberman
 	
 		
 	bl write_char_at_position	;clears old position
@@ -487,15 +554,39 @@ move_bomberman
 	
 	
 can_move_bomberman	
+	
 	mov r0, #66
 	bl write_char_at_position		;normal movement
 	b done_moving_bomberman
 	
 cant_move_bomberman
+	
 	mov r0, #66
 	mov r1, r8
 	mov r2, r9
 	bl write_char_at_position		;rewrites bomberman to original location
+	b done_moving_bomberman
+	
+bomberman_drops_bomb
+
+	ldr r4, =bomb_x_loc		; save current bomberman x,y 
+	strb r8, [r4]			; as bomb x, y
+	ldr r4, =bomb_y_loc
+	strb r9, [r4]
+	
+	ldr r4, =bomb_set		; set bomb_set to 1
+	mov r5, #1
+	strb r5, [r4]
+	
+	ldr r4, =bomb_timer
+	mov r5, #5
+	strb r5, [r4]
+	
+	mov r0, #83				; prints "S" for bomberman on bomb
+	mov r1, r8
+	mov r2, r9
+	bl write_char_at_position
+	
 	b done_moving_bomberman
 	
 bomberman_died
@@ -537,8 +628,6 @@ enemy_one_move_loop
 	ldr r3, =random_number
 	ldr r0, [r3]
 	lsr r0, r0, #16
-	;bic r0, r0, #0xFF000000
-	;bic r0, r0, #0xFF0000
 	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
@@ -549,9 +638,6 @@ enemy_one_move_loop
 	ldr r3, =random_number
 	ldr r0, [r3]
 	lsr r0, r0, #16
-
-	;bic r0, r0, #0xFF000000
-	;bic r0, r0, #0xFF0000
 	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
@@ -647,9 +733,6 @@ enemy_two_move_loop
 	ldr r0, [r3]
 	lsr r0, r0, #16	
 	
-	;bic r0, r0, #0xFF000000
-	;bic r0, r0, #0xFF0000
-	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
 	
@@ -659,9 +742,6 @@ enemy_two_move_loop
 	ldr r3, =random_number
 	ldr r0, [r3]
 	lsr r0, r0, #16
-	
-	;bic r0, r0, #0xFF000000
-	;bic r0, r0, #0xFF0000
 	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
@@ -759,9 +839,6 @@ enemy_super_move_loop
 	ldr r0, [r3]
 	lsr r0, r0, #16
 	
-	;bic r0, r0, #0xFF000000
-	;bic r0, r0, #0xFF0000
-	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
 	
@@ -771,9 +848,6 @@ enemy_super_move_loop
 	ldr r3, =random_number
 	ldr r0, [r3]
 	lsr r0, r0, #16
-	
-	;bic r0, r0, #0xFF000000
-	;bic r0, r0, #0xFF0000
 	
 	mov r1, #4
 	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
