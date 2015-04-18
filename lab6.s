@@ -228,37 +228,6 @@ level_init
 	orr r5, r5, #1
 	str r5, [r4]
 
-	
-
-	mov r10, #0
-	mov r5, #0
-	mov r6, #0
-	mov r7, #0
-	mov r8, #0
-	mov r9, #0
-random_debug
-	bl generate_new_random
-	ldr r1, = random_number
-	ldr r0, [r1]
-	lsr r0, r0, #16
-	;bic r0, r0, #0xFF000000
-	;bic r0, r0, #0x00FF0000
-	mov r1, #4
-	bl div_and_mod
-	cmp r1, #0
-	addeq r5, r5, #1
-	cmp r1, #1
-	addeq r6, r6, #1
-	cmp r1, #2
-	addeq r7, r7, #1
-	cmp r1, #3
-	addeq r8, r8, #1
-	cmp r1, #4
-	addeq r9, r9, #1
-	
-	cmp r10, #1000
-	bne random_debug 
-
 game_loop
 	
 	;bl move_characters
