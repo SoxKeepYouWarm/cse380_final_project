@@ -25,7 +25,7 @@ score =  	"   Time:120 Score:0000   \n",13,0
 	ALIGN
 line1 =  	"ZZZZZZZZZZZZZZZZZZZZZZZZZ\n",13,0
 	ALIGN
-line2 =  	"Z                      xZ\n",13,0
+line2 =  	"ZB                     xZ\n",13,0
 	ALIGN
 line3 =  	"Z Z Z Z Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
