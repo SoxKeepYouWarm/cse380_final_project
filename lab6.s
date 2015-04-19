@@ -444,7 +444,7 @@ read_data_handler_exit
 
 	
 bomb_handler
-	stmfd sp!, {r4 - r5, lr}
+	stmfd sp!, {r0 - r5, lr}
 
 	ldr r4, =bomb_set
 	ldrb r5, [r4]
@@ -452,6 +452,42 @@ bomb_handler
 	beq handle_bomb_done	; if bomb not set, exit
 	
 	; bomb is set
+	
+	; if bomb occupies position other than
+	; bomberman's position, draw to screen
+	
+	ldr r4, =bomb_x_loc
+	ldrb r5, [r4]
+	
+	ldr r4, =bomberman_x_loc
+	ldrb r6, [r4]
+	
+	cmp r5, r6
+	beq dont_draw_bomb
+	
+	ldr r4, =bomb_y_loc
+	ldrb r5, [r4]
+	
+	ldr r4, =bomberman_y_loc
+	ldrb r6, [r4]
+	
+	cmp r5, r5
+	beq dont_draw_bomb
+	
+	; bomb x y != bomberman x y
+	
+	ldr r4, =bomb_x_loc
+	ldrb r0, [r4]
+	
+	ldr r4, =bomb_y_loc
+	ldrb r1, [r4]
+	
+	mov r0, #111
+	
+	bl write_char_at_position
+	
+	
+dont_draw_bomb
 	
 	; if bomb is set, timer is always initialized
 	
@@ -478,7 +514,7 @@ bomb_handler
 	
 handle_bomb_done
 
-	ldmfd sp!, {r4 - r5, lr}
+	ldmfd sp!, {r0 - r5, lr}
 	bx lr
 
 
