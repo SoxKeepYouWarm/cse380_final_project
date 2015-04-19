@@ -311,7 +311,7 @@ FIQ_Exit
 timer_one_mr_one_handler
 	stmfd sp!, {r0, r1, lr}
 	
-	bl handle_bomb
+	bl bomb_handler
 	bl move_characters
 	
 	ldr r0, =termination_condition
@@ -435,20 +435,61 @@ read_data_handler_exit
 ;//////////////////////////////////////////////////////////////////	
 ;//////////////////////////////////////////////////////////////////
 	
-;////////////////////////////////////////////////////////////////
-;////////////////////////////////////////////////////////////////		
-; MOVE_CHARACTERS MOVE_CHARACTERS MOVE_CHARACTERS MOVE_CHARACTERS
-;////////////////////////////////////////////////////////////////	
-;////////////////////////////////////////////////////////////////
+	
+;/////////////////////////////////////////////////////////////////
+;/////////////////////////////////////////////////////////////////		
+; BOMB_HANDLER BOMB_HANDLER BOMB_HANDLER BOMB_HANDLER BOMB_HANDLER
+;/////////////////////////////////////////////////////////////////	
+;/////////////////////////////////////////////////////////////////
+
+	
+bomb_handler
+	stmfd sp!, {r4 - r5, lr}
+
+	ldr r4, =bomb_set
+	ldrb r5, [r4]
+	cmp r5, #0				
+	beq handle_bomb_done	; if bomb not set, exit
+	
+	; bomb is set
+	
+	; if bomb is set, timer is always initialized
+	
+	; if timer > 0 : decrement timer
+	; if timer = 0 detonate bomb and decrement timer
+	; if timer = -1 remove bomb explosion, unest bomb
+
+	ldr r4, =bomb_timer
+	ldrb r5, [r4]
+	
+	cmp r5, #0
+	
+	subgt r5, r5, #1				; conditional timer > 0
+	strbgt r5, [r4]
+	
+	bleq detonate_bomb				; conditional timer == 0
+	subeq r5, r5, #1
+	strbeq r5, [r4]
+	
+	bllt remove_bomb_explosion		; conditional timer < 0
+	ldrlt r4, =bomb_set
+	movlt r5, #0
+	strblt r5, [r4]
+	
+handle_bomb_done
+
+	ldmfd sp!, {r4 - r5, lr}
+	bx lr
 
 
-handle_bomb
+detonate_bomb
 	stmfd sp!, {lr}
 
-	ldr r4, =bomb_exploding
-	ldrb r5, [r4]
-	cmp r5, #1
-	bne bomb_not_exploding		
+	ldmfd sp!, {lr}
+	bx lr
+
+remove_bomb_explosion
+	stmfd sp!, {r0 - r5, lr}
 	
 	; remove bomb explosion
 	; unset bomb_exploding
@@ -458,15 +499,17 @@ handle_bomb
 	ldr r3, =bomb_x_loc
 	ldr r4, =bomb_y_loc
 	
-	; check above
+remove_explosion_above
 	ldrb r1, [r3]
 	ldrb r2, [r4]
+	
 	add r2, r2, #1
 	
 	bl read_char_at_position
 	cmp r0, #124				; vertical bomb explosion
 	mov r0, #32
 	bleq write_char_at_position		; write " " to explosion position
+	bne remove_explosion_left
 	
 	add r2, r2, #1					; check 2 above
 	bl read_char_at_position
@@ -474,26 +517,32 @@ handle_bomb
 	mov r0, #32
 	bleq write_char_at_position		; write " " to explosion position
 	
-	sub r2, r2, #2		; back to bomb origin
 	
-	; check left
+remove_explosion_left
+	ldrb r1, [r3]
+	ldrb r2, [r4]
+	
 	sub r1, r1, #1
+	
 	bl read_char_at_position
 	cmp r0, #45
 	mov r0, #32
 	bleq write_char_at_position		; write " " to explosion position
+	bne remove_explosion_right
 	
 	sub r1, r1, #1					; check 2 left
 	bl read_char_at_position
 	cmp r0, #45
 	mov r0, #32
 	bleq write_char_at_position		; write " " to explosion position
+	bne remove_explosion_right
 	
 	sub r1, r1, #1					; check 3 left
 	bl read_char_at_position
 	cmp r0, #45
 	mov r0, #32
 	bleq write_char_at_position		; write " " to explosion position
+	bne remove_explosion_right
 	
 	sub r1, r1, #1					; check 4 left
 	bl read_char_at_position
@@ -501,27 +550,30 @@ handle_bomb
 	mov r0, #32
 	bleq write_char_at_position		; write " " to explosion position
 	
-	
-	add r1, r1, #4		; back to bomb origin
-	
-	; check right
+		
+remove_explosion_right
+	ldrb r1, [r3]
+	ldrb r2, [r4]
 	add r1, r1, #1
 	bl read_char_at_position
 	cmp r0, #45
 	mov r0, #32
 	bleq write_char_at_position		; write " " to explosion position
+	bne remove_explosion_below
 	
 	add r1, r1, #1					; check 2 right
 	bl read_char_at_position
 	cmp r0, #45
 	mov r0, #32
 	bleq write_char_at_position		; write " " to explosion position
+	bne remove_explosion_below
 	
 	add r1, r1, #1					; check 3 right
 	bl read_char_at_position
 	cmp r0, #45
 	mov r0, #32
 	bleq write_char_at_position		; write " " to explosion position
+	bne remove_explosion_below
 	
 	add r1, r1, #1					; check 4 right
 	bl read_char_at_position
@@ -529,15 +581,18 @@ handle_bomb
 	mov r0, #32
 	bleq write_char_at_position		; write " " to explosion position
 	
+		
+remove_explosion_below
+	ldrb r1, [r3]
+	ldrb r2, [r4]
 	
-	sub r1, r1, #4		; back to bomb origin
-	
-	; check below
 	add r2, r2, #1					; check 1 below
+	
 	bl read_char_at_position
 	cmp r0, #45
 	mov r0, #32
 	bleq write_char_at_position		; write " " to explosion position
+	bne remove_bomb_explosion_done
 	
 	add r2, r2, #1
 	bl read_char_at_position		; check 2 below
@@ -546,30 +601,28 @@ handle_bomb
 	bleq write_char_at_position		; write " " to explosion position
 	
 	
-bomb_not_exploding
-
-	ldr r4, =bomb_set
-	ldrb r5, [r4]
-	cmp r5, #1
-	bne handle_bomb_done		; is bomb set?
+	; unset bomb_set to allow
+	; for a new bomb
 	
-	ldr r4, =bomb_timer
-	ldrb r5, [r4]
-	sub r5, r5, #1
-	cmp r5, #0
-	bne handle_bomb_done		; is bomb ready to blow?
+remove_bomb_explosion_done
 	
-	ldr r4, =bomb_exploding		; bomb is exploding
-	mov r5, #1
-	strb r5, [r4]
-	
-	; print bomb explosion
-	
-	
-handle_bomb_done
-
-	ldmfd sp!, {lr}
+	ldmfd sp!, {r0 - r5, lr}
 	bx lr
+	
+
+;////////////////////////////////////////////////////////////////
+;////////////////////////////////////////////////////////////////		
+; BOMB_HANDLER BOMB_HANDLER BOMB_HANDLER BOMB_HANDLER BOMB_HANDLER
+;////////////////////////////////////////////////////////////////	
+;////////////////////////////////////////////////////////////////
+	
+	
+;////////////////////////////////////////////////////////////////
+;////////////////////////////////////////////////////////////////		
+; MOVE_CHARACTERS MOVE_CHARACTERS MOVE_CHARACTERS MOVE_CHARACTERS
+;////////////////////////////////////////////////////////////////	
+;////////////////////////////////////////////////////////////////
+
 
 move_characters
 	stmfd sp!, {lr}
