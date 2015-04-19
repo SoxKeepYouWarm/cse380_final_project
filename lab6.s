@@ -521,8 +521,66 @@ handle_bomb_done
 detonate_bomb
 	stmfd sp!, {lr}
 
+	ldr r3, =bomb_x_loc
+	ldr r4, =bomb_y_loc
+	
+detonate_bomb_up
+	
+	ldrb r1, [r3]
+	ldrb r2, [r4]
+	mov r3, #0			; counts explosions placed
+detonate_bomb_up_loop
+
+	sub r1, r1, #1				; move up
+	bl read_char_at_position
+	
+	cmp r0, #32			; empty space?
+	; draw explosion
+	; increment r3 counter
+	; cmp r3 == 2 ( done : loop )
+	
+	cmp r0, #90			; wall?
+	; no explosion, done in this direction
+	
+	cmp r0, #35			; brick?
+	; no explosion, done in this direction
+	
+	cmp r0, #66			; bomberman
+	; draw explosion
+	; increment r3 counter
+	; bomberman dies
+	; cmp r3 == 2 ( done : loop )
+	
+	cmp r0, #120		; enemy
+	; draw explosion 
+	; increment r3 counter
+	; enemy dies
+	; cmp r3 == 2 ( done : loop )
+	
+	cmp r0, #43			; super enemy
+	; draw explosion
+	; increment r3 counter
+	; super enemy dies
+	; cmp r3 == 2 ( done : loop)
+	
+detonate_bomb_up_done
+
+detonate_bomb_left
+
+detonate_bomb_left_done
+
+detonate_bomb_right
+
+detonate_bomb_right_done
+
+detonate_bomb_down
+
+detonate_bomb_down_done
+
 	ldmfd sp!, {lr}
 	bx lr
+
+
 
 remove_bomb_explosion
 	stmfd sp!, {r0 - r5, lr}
