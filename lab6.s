@@ -530,10 +530,11 @@ dont_draw_bomb		; skips draw stage
 	subeq r5, r5, #1
 	strbeq r5, [r4]
 	
-	bllt remove_bomb_explosion		; conditional timer < 0
-	ldrlt r4, =bomb_set
-	movlt r5, #0
-	strblt r5, [r4]
+	cmp r5, #-1
+	bleq remove_bomb_explosion		; conditional timer < 0
+	ldreq r4, =bomb_set
+	moveq r5, #0
+	strbeq r5, [r4]
 	
 handle_bomb_done
 
@@ -558,6 +559,7 @@ detonate_bomb_up_loop
 	bl read_char_at_position
 	
 	cmp r0, #32			; empty space?
+	bne bomb_up_not_empty	; test wall next
 	; draw explosion
 	moveq r0, #124
 	bleq write_char_at_position
@@ -568,6 +570,7 @@ detonate_bomb_up_loop
 	beq detonate_bomb_up_done
 	bne detonate_bomb_up_loop
 	
+bomb_up_not_empty
 	cmp r0, #90			; wall?
 	; no explosion, done in this direction
 	beq detonate_bomb_up_done
@@ -620,6 +623,9 @@ detonate_bomb_up_done
 
 detonate_bomb_left
 	
+	ldr r3, =bomb_x_loc
+	ldr r4, =bomb_y_loc
+
 	ldrb r1, [r3]
 	ldrb r2, [r4]
 	mov r3, #0			; counts explosions placed
@@ -629,8 +635,9 @@ detonate_bomb_left_loop
 	bl read_char_at_position
 	
 	cmp r0, #32			; empty space?
+	bne bomb_left_not_empty
 	; draw explosion
-	moveq r0, #124
+	moveq r0, #45		
 	bleq write_char_at_position
 	; increment r3 counter
 	addeq r3, r3, #1
@@ -639,6 +646,7 @@ detonate_bomb_left_loop
 	beq detonate_bomb_left_done
 	bne detonate_bomb_left_loop
 	
+bomb_left_not_empty
 	cmp r0, #90			; wall?
 	; no explosion, done in this direction
 	beq detonate_bomb_left_done
@@ -649,7 +657,7 @@ detonate_bomb_left_loop
 	
 	cmp r0, #66			; bomberman
 	; draw explosion
-	moveq r0, #124
+	moveq r0, #45
 	bleq write_char_at_position
 	; increment r3 counter
 	addeq r3, r3, #1
@@ -661,7 +669,7 @@ detonate_bomb_left_loop
 	
 	cmp r0, #120		; enemy
 	; draw explosion 
-	moveq r0, #124
+	moveq r0, #45
 	bleq write_char_at_position
 	; increment r3 counter
 	addeq r3, r3, #1
@@ -674,7 +682,7 @@ detonate_bomb_left_loop
 	
 	cmp r0, #43			; super enemy
 	; draw explosion
-	moveq r0, #124
+	moveq r0, #45
 	bleq write_char_at_position
 	; increment r3 counter
 	add r3, r3, #1
@@ -689,6 +697,9 @@ detonate_bomb_left_done
 
 detonate_bomb_right
 	
+	ldr r3, =bomb_x_loc
+	ldr r4, =bomb_y_loc
+
 	ldrb r1, [r3]
 	ldrb r2, [r4]
 	mov r3, #0			; counts explosions placed
@@ -698,8 +709,9 @@ detonate_bomb_right_loop
 	bl read_char_at_position
 	
 	cmp r0, #32			; empty space?
+	bne bomb_right_not_empty
 	; draw explosion
-	moveq r0, #124
+	moveq r0, #45
 	bleq write_char_at_position
 	; increment r3 counter
 	addeq r3, r3, #1
@@ -708,6 +720,7 @@ detonate_bomb_right_loop
 	beq detonate_bomb_right_done
 	bne detonate_bomb_right_loop
 	
+bomb_right_not_empty
 	cmp r0, #90			; wall?
 	; no explosion, done in this direction
 	beq detonate_bomb_right_done
@@ -718,7 +731,7 @@ detonate_bomb_right_loop
 	
 	cmp r0, #66			; bomberman
 	; draw explosion
-	moveq r0, #124
+	moveq r0, #45
 	bleq write_char_at_position
 	; increment r3 counter
 	addeq r3, r3, #1
@@ -730,7 +743,7 @@ detonate_bomb_right_loop
 	
 	cmp r0, #120		; enemy
 	; draw explosion 
-	moveq r0, #124
+	moveq r0, #45
 	bleq write_char_at_position
 	; increment r3 counter
 	addeq r3, r3, #1
@@ -743,7 +756,7 @@ detonate_bomb_right_loop
 	
 	cmp r0, #43			; super enemy
 	; draw explosion
-	moveq r0, #124
+	moveq r0, #45
 	bleq write_char_at_position
 	; increment r3 counter
 	add r3, r3, #1
@@ -758,6 +771,9 @@ detonate_bomb_right_done
 
 detonate_bomb_down
 
+	ldr r3, =bomb_x_loc
+	ldr r4, =bomb_y_loc
+	
 	ldrb r1, [r3]
 	ldrb r2, [r4]
 	mov r3, #0			; counts explosions placed
@@ -767,6 +783,7 @@ detonate_bomb_down_loop
 	bl read_char_at_position
 	
 	cmp r0, #32			; empty space?
+	bne bomb_down_not_empty
 	; draw explosion
 	moveq r0, #124
 	bleq write_char_at_position
@@ -777,6 +794,7 @@ detonate_bomb_down_loop
 	beq detonate_bomb_down_done
 	bne detonate_bomb_down_loop
 	
+bomb_down_not_empty
 	cmp r0, #90			; wall?
 	; no explosion, done in this direction
 	beq detonate_bomb_down_done
@@ -835,25 +853,27 @@ remove_bomb_explosion
 	
 	; remove bomb explosion
 	; unset bomb_exploding
+	ldr r4, =bomb_set
 	mov r5, #0
 	strb r5, [r4]
 	
+remove_explosion_above
+
 	ldr r3, =bomb_x_loc
 	ldr r4, =bomb_y_loc
-	
-remove_explosion_above
+
 	ldrb r1, [r3]
 	ldrb r2, [r4]
 	
-	add r2, r2, #1
+	sub r2, r2, #1
 	
 	bl read_char_at_position
 	cmp r0, #124				; vertical bomb explosion
-	mov r0, #32
+	moveq r0, #32
 	bleq write_char_at_position		; write " " to explosion position
 	bne remove_explosion_left
 	
-	add r2, r2, #1					; check 2 above
+	sub r2, r2, #1					; check 2 above
 	bl read_char_at_position
 	cmp r0, #124
 	mov r0, #32
@@ -861,6 +881,10 @@ remove_explosion_above
 	
 	
 remove_explosion_left
+	
+	ldr r3, =bomb_x_loc
+	ldr r4, =bomb_y_loc
+
 	ldrb r1, [r3]
 	ldrb r2, [r4]
 	
@@ -894,9 +918,15 @@ remove_explosion_left
 	
 		
 remove_explosion_right
+
+	ldr r3, =bomb_x_loc
+	ldr r4, =bomb_y_loc
+
 	ldrb r1, [r3]
 	ldrb r2, [r4]
+
 	add r1, r1, #1
+	
 	bl read_char_at_position
 	cmp r0, #45
 	mov r0, #32
@@ -925,20 +955,24 @@ remove_explosion_right
 	
 		
 remove_explosion_below
+
+	ldr r3, =bomb_x_loc
+	ldr r4, =bomb_y_loc
+
 	ldrb r1, [r3]
 	ldrb r2, [r4]
 	
 	add r2, r2, #1					; check 1 below
 	
 	bl read_char_at_position
-	cmp r0, #45
+	cmp r0, #124
 	mov r0, #32
 	bleq write_char_at_position		; write " " to explosion position
 	bne remove_bomb_explosion_done
 	
 	add r2, r2, #1
 	bl read_char_at_position		; check 2 below
-	cmp r0, #45
+	cmp r0, #124
 	mov r0, #32
 	bleq write_char_at_position		; write " " to explosion position
 	
