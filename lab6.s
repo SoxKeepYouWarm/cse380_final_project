@@ -229,6 +229,26 @@ level_init
 	ldr r5, [r4]			; used for timer interrupt
 	orr r5, r5, #1
 	str r5, [r4]
+	
+	
+	; BOMB DEBUG BOMB DEBUG 
+	;////////////////////////
+	ldr r4, =bomb_x_loc		; save current bomberman x,y 
+	mov r8, #5
+	strb r8, [r4]			; as bomb x, y
+	ldr r4, =bomb_y_loc
+	mov r9, #6
+	strb r9, [r4]
+	
+	ldr r4, =bomb_set		; set bomb_set to 1
+	mov r5, #1
+	strb r5, [r4]
+	
+	ldr r4, =bomb_timer
+	mov r5, #5
+	strb r5, [r4]
+	;////////////////////////
+	
 
 game_loop
 	
@@ -311,7 +331,7 @@ FIQ_Exit
 timer_one_mr_one_handler
 	stmfd sp!, {r0, r1, lr}
 	
-	bl bomb_handler
+	;bl bomb_handler
 	bl move_characters
 	
 	ldr r0, =termination_condition
@@ -463,7 +483,9 @@ bomb_handler
 	ldrb r6, [r4]
 	
 	cmp r5, r6
-	beq dont_draw_bomb
+	bne skip_y_test
+	
+	; bomb x == bomberman x
 	
 	ldr r4, =bomb_y_loc
 	ldrb r5, [r4]
@@ -472,22 +494,23 @@ bomb_handler
 	ldrb r6, [r4]
 	
 	cmp r5, r5
-	beq dont_draw_bomb
+	beq dont_draw_bomb		; bomb y also == bomberman y
 	
+skip_y_test
 	; bomb x y != bomberman x y
 	
 	ldr r4, =bomb_x_loc
-	ldrb r0, [r4]
+	ldrb r1, [r4]
 	
 	ldr r4, =bomb_y_loc
-	ldrb r1, [r4]
+	ldrb r2, [r4]
 	
 	mov r0, #111
 	
 	bl write_char_at_position
 	
 	
-dont_draw_bomb
+dont_draw_bomb		; skips draw stage
 	
 	; if bomb is set, timer is always initialized
 	
@@ -531,7 +554,7 @@ detonate_bomb_up
 	mov r3, #0			; counts explosions placed
 detonate_bomb_up_loop
 
-	sub r1, r1, #1				; move up
+	sub r2, r2, #1				; move up
 	bl read_char_at_position
 	
 	cmp r0, #32			; empty space?
@@ -602,7 +625,7 @@ detonate_bomb_left
 	mov r3, #0			; counts explosions placed
 detonate_bomb_left_loop
 
-	sub r2, r2, #1				; move left
+	sub r1, r1, #1				; move left
 	bl read_char_at_position
 	
 	cmp r0, #32			; empty space?
@@ -671,7 +694,7 @@ detonate_bomb_right
 	mov r3, #0			; counts explosions placed
 detonate_bomb_right_loop
 
-	add r2, r2, #1				; move left
+	add r1, r1, #1				; move right
 	bl read_char_at_position
 	
 	cmp r0, #32			; empty space?
@@ -740,7 +763,7 @@ detonate_bomb_down
 	mov r3, #0			; counts explosions placed
 detonate_bomb_down_loop
 
-	sub r1, r1, #1				; move up
+	add r2, r2, #1				; move down
 	bl read_char_at_position
 	
 	cmp r0, #32			; empty space?
@@ -946,10 +969,11 @@ remove_bomb_explosion_done
 move_characters
 	stmfd sp!, {lr}
 	
-	bl move_bomberman
-	bl move_enemy_one
-	bl move_enemy_two
-	bl move_enemy_super
+	bl bomb_handler
+	;bl move_bomberman
+	;bl move_enemy_one
+	;bl move_enemy_two
+	;bl move_enemy_super
 	
 	ldmfd sp!, {lr}
 	bx lr
