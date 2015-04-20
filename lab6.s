@@ -543,7 +543,7 @@ handle_bomb_done
 
 
 detonate_bomb
-	stmfd sp!, {r0 - r4, lr}
+	stmfd sp!, {r0 - r5, lr}
 
 	ALIGN
 explosion_length_up 	= 0
@@ -865,7 +865,7 @@ bomb_down_not_empty
 	
 detonate_bomb_down_done
 
-	ldmfd sp!, {r0 - r4, lr}
+	ldmfd sp!, {r0 - r5, lr}
 	bx lr
 
 
@@ -891,6 +891,9 @@ remove_explosion_above
 	ldrb r4, [r5]
 	
 	mov r0, #32
+
+	bl write_char_at_position		; clear center bomb char
+
 	mov r3, #0
 remove_explosion_above_loop
 	
@@ -923,7 +926,7 @@ remove_explosion_left_loop
 	cmp r3, r4
 	beq remove_explosion_right
 	
-	add r1, r1, #1
+	sub r1, r1, #1
 	bl write_char_at_position
 	add r3, r3, #1
 	
@@ -952,7 +955,7 @@ remove_explosion_right_loop
 	bl write_char_at_position
 	add r3, r3, #1
 	
-	b remove_explosion_above_loop
+	b remove_explosion_right_loop
 	
 		
 remove_explosion_down
@@ -1003,10 +1006,10 @@ move_characters
 	stmfd sp!, {lr}
 	
 	bl bomb_handler
-	;bl move_bomberman
-	;bl move_enemy_one
-	;bl move_enemy_two
-	;bl move_enemy_super
+	bl move_bomberman
+	bl move_enemy_one
+	bl move_enemy_two
+	bl move_enemy_super
 	
 	ldmfd sp!, {lr}
 	bx lr
