@@ -519,7 +519,7 @@ handle_bomb_done
 
 
 detonate_bomb
-	stmfd sp!, {lr}
+	stmfd sp!, {r0 - r4, lr}
 
 	ldr r3, =bomb_x_loc
 	ldr r4, =bomb_y_loc
@@ -536,48 +536,273 @@ detonate_bomb_up_loop
 	
 	cmp r0, #32			; empty space?
 	; draw explosion
+	moveq r0, #124
+	bleq write_char_at_position
 	; increment r3 counter
+	addeq r3, r3, #1
 	; cmp r3 == 2 ( done : loop )
+	cmp r3, #2
+	beq detonate_bomb_up_done
+	bne detonate_bomb_up_loop
 	
 	cmp r0, #90			; wall?
 	; no explosion, done in this direction
+	beq detonate_bomb_up_done
 	
 	cmp r0, #35			; brick?
 	; no explosion, done in this direction
+	beq detonate_bomb_up_done
 	
 	cmp r0, #66			; bomberman
 	; draw explosion
+	moveq r0, #124
+	bleq write_char_at_position
 	; increment r3 counter
+	addeq r3, r3, #1
 	; bomberman dies
 	; cmp r3 == 2 ( done : loop )
+	cmp r3, #2
+	beq detonate_bomb_up_done
+	bne detonate_bomb_up_loop
 	
 	cmp r0, #120		; enemy
 	; draw explosion 
+	moveq r0, #124
+	bleq write_char_at_position
 	; increment r3 counter
+	addeq r3, r3, #1
 	; enemy dies
+	
 	; cmp r3 == 2 ( done : loop )
+	cmp r3, #2
+	beq detonate_bomb_up_done
+	bne detonate_bomb_up_loop
 	
 	cmp r0, #43			; super enemy
 	; draw explosion
+	moveq r0, #124
+	bleq write_char_at_position
 	; increment r3 counter
+	add r3, r3, #1
 	; super enemy dies
+	
 	; cmp r3 == 2 ( done : loop)
+	cmp r3, #2
+	beq detonate_bomb_up_done
+	bne detonate_bomb_up_loop
 	
 detonate_bomb_up_done
 
-detonate_bomb_left
 
+
+detonate_bomb_left
+	
+	ldrb r1, [r3]
+	ldrb r2, [r4]
+	mov r3, #0			; counts explosions placed
+detonate_bomb_left_loop
+
+	sub r2, r2, #1				; move left
+	bl read_char_at_position
+	
+	cmp r0, #32			; empty space?
+	; draw explosion
+	moveq r0, #124
+	bleq write_char_at_position
+	; increment r3 counter
+	addeq r3, r3, #1
+	; cmp r3 == 4 ( done : loop )
+	cmp r3, #4
+	beq detonate_bomb_left_done
+	bne detonate_bomb_left_loop
+	
+	cmp r0, #90			; wall?
+	; no explosion, done in this direction
+	beq detonate_bomb_left_done
+	
+	cmp r0, #35			; brick?
+	; no explosion, done in this direction
+	beq detonate_bomb_left_done
+	
+	cmp r0, #66			; bomberman
+	; draw explosion
+	moveq r0, #124
+	bleq write_char_at_position
+	; increment r3 counter
+	addeq r3, r3, #1
+	; bomberman dies
+	; cmp r3 == 4 ( done : loop )
+	cmp r3, #4
+	beq detonate_bomb_left_done
+	bne detonate_bomb_left_loop
+	
+	cmp r0, #120		; enemy
+	; draw explosion 
+	moveq r0, #124
+	bleq write_char_at_position
+	; increment r3 counter
+	addeq r3, r3, #1
+	; enemy dies
+	
+	; cmp r3 == 4 ( done : loop )
+	cmp r3, #4
+	beq detonate_bomb_left_done
+	bne detonate_bomb_left_loop
+	
+	cmp r0, #43			; super enemy
+	; draw explosion
+	moveq r0, #124
+	bleq write_char_at_position
+	; increment r3 counter
+	add r3, r3, #1
+	; super enemy dies
+	
+	; cmp r3 == 4 ( done : loop)
+	cmp r3, #4
+	beq detonate_bomb_left_done
+	bne detonate_bomb_left_loop
+	
 detonate_bomb_left_done
 
 detonate_bomb_right
+	
+	ldrb r1, [r3]
+	ldrb r2, [r4]
+	mov r3, #0			; counts explosions placed
+detonate_bomb_right_loop
 
+	add r2, r2, #1				; move left
+	bl read_char_at_position
+	
+	cmp r0, #32			; empty space?
+	; draw explosion
+	moveq r0, #124
+	bleq write_char_at_position
+	; increment r3 counter
+	addeq r3, r3, #1
+	; cmp r3 == 4 ( done : loop )
+	cmp r3, #4
+	beq detonate_bomb_right_done
+	bne detonate_bomb_right_loop
+	
+	cmp r0, #90			; wall?
+	; no explosion, done in this direction
+	beq detonate_bomb_right_done
+	
+	cmp r0, #35			; brick?
+	; no explosion, done in this direction
+	beq detonate_bomb_right_done
+	
+	cmp r0, #66			; bomberman
+	; draw explosion
+	moveq r0, #124
+	bleq write_char_at_position
+	; increment r3 counter
+	addeq r3, r3, #1
+	; bomberman dies
+	; cmp r3 == 4 ( done : loop )
+	cmp r3, #4
+	beq detonate_bomb_right_done
+	bne detonate_bomb_right_loop
+	
+	cmp r0, #120		; enemy
+	; draw explosion 
+	moveq r0, #124
+	bleq write_char_at_position
+	; increment r3 counter
+	addeq r3, r3, #1
+	; enemy dies
+	
+	; cmp r3 == 4 ( done : loop )
+	cmp r3, #4
+	beq detonate_bomb_right_done
+	bne detonate_bomb_right_loop
+	
+	cmp r0, #43			; super enemy
+	; draw explosion
+	moveq r0, #124
+	bleq write_char_at_position
+	; increment r3 counter
+	add r3, r3, #1
+	; super enemy dies
+	
+	; cmp r3 == 4 ( done : loop)
+	cmp r3, #4
+	beq detonate_bomb_right_done
+	bne detonate_bomb_right_loop
+	
 detonate_bomb_right_done
 
 detonate_bomb_down
 
+	ldrb r1, [r3]
+	ldrb r2, [r4]
+	mov r3, #0			; counts explosions placed
+detonate_bomb_down_loop
+
+	sub r1, r1, #1				; move up
+	bl read_char_at_position
+	
+	cmp r0, #32			; empty space?
+	; draw explosion
+	moveq r0, #124
+	bleq write_char_at_position
+	; increment r3 counter
+	addeq r3, r3, #1
+	; cmp r3 == 2 ( done : loop )
+	cmp r3, #2
+	beq detonate_bomb_down_done
+	bne detonate_bomb_down_loop
+	
+	cmp r0, #90			; wall?
+	; no explosion, done in this direction
+	beq detonate_bomb_down_done
+	
+	cmp r0, #35			; brick?
+	; no explosion, done in this direction
+	beq detonate_bomb_down_done
+	
+	cmp r0, #66			; bomberman
+	; draw explosion
+	moveq r0, #124
+	bleq write_char_at_position
+	; increment r3 counter
+	addeq r3, r3, #1
+	; bomberman dies
+	; cmp r3 == 2 ( done : loop )
+	cmp r3, #2
+	beq detonate_bomb_down_done
+	bne detonate_bomb_down_loop
+	
+	cmp r0, #120		; enemy
+	; draw explosion 
+	moveq r0, #124
+	bleq write_char_at_position
+	; increment r3 counter
+	addeq r3, r3, #1
+	; enemy dies
+	
+	; cmp r3 == 2 ( done : loop )
+	cmp r3, #2
+	beq detonate_bomb_down_done
+	bne detonate_bomb_down_loop
+	
+	cmp r0, #43			; super enemy
+	; draw explosion
+	moveq r0, #124
+	bleq write_char_at_position
+	; increment r3 counter
+	add r3, r3, #1
+	; super enemy dies
+	
+	; cmp r3 == 2 ( done : loop)
+	cmp r3, #2
+	beq detonate_bomb_down_done
+	bne detonate_bomb_down_loop
+	
 detonate_bomb_down_done
 
-	ldmfd sp!, {lr}
+	ldmfd sp!, {r0 - r4, lr}
 	bx lr
 
 
