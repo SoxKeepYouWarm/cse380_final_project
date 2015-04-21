@@ -1637,16 +1637,30 @@ check_for_enemy_super
 	ldr r4, =enemy_super_x_loc
 	ldrb r5, [r4]
 	cmp r5, r1
-	bne check_memory_map
+	bne check_for_bomb
 	
 	ldr r4, =enemy_super_y_loc
 	ldrb r5, [r4]
 	cmp r5, r2
-	bne check_memory_map
+	bne check_for_bomb
 	
 	mov r0, #43
 	b read_char_at_position_done
 	
+check_for_bomb
+	ldr r4, =bomb_x_loc
+	ldrb r5, [r4]
+	cmp r5, r1
+	bne check_memory_map
+	
+	ldr r4, =bomb_y_loc
+	ldrb r5, [r4]
+	cmp r5, r2
+	bne check_memory_map
+	
+	mov r0, #111
+	b read_char_at_position_done
+		
 check_memory_map
 	ldr r4, =memory_map
 	sub r2, r2, #1
