@@ -594,5 +594,30 @@ pin_connect_block_setup_for_uart0
     STR r1, [r0]
     LDMFD sp!, {r0, r1, lr}
     BX lr
+	
+	
+level_1_timing dcd		0x59728379
+	ALIGN
+level_2_timing dcd		0x00000000
+	ALIGN
+level_3_timing dcd		0x00000000
+	ALIGN
+level_4_timing dcd 		0x00000000
+	ALIGN
+level_5_timing dcd 		0x00000000
+	ALIGN
+level_6_timing dcd 		0x00000000
+	ALIGN
+level_7_timing dcd 		0x00000000
+	ALIGN
+
+level_timings 	dcd level_1_timing
+				dcd level_2_timing
+				dcd level_3_timing
+				dcd level_4_timing
+				dcd level_5_timing
+				dcd level_6_timing
+				dcd level_7_timing
+	ALIGN
 
 	END

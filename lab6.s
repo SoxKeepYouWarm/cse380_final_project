@@ -6,7 +6,6 @@
 	IMPORT read_character
 	IMPORT interrupt_init
 	IMPORT div_and_mod
-	;IMPORT write_char_at_position
 	IMPORT double_game_speed
 	IMPORT halve_game_speed
 		
@@ -15,10 +14,6 @@
 
 BASE EQU 0x40000000
 	
-	
-	;Winnick variables
-curser EQU 0x400000BC
-
 title =  	"        Bomberman        \n",13,0
 	ALIGN
 score =  	"   Time:120 Score:0000   \n",13,0
@@ -57,10 +52,7 @@ line16 = 	"Zx                     +Z\n",13,0
 	ALIGN
 line17 = 	"ZZZZZZZZZZZZZZZZZZZZZZZZZ\n",13,0
 	ALIGN
-newadress = "                                                    ",0
-	ALIGN
-cursor_source = " ",0
-	ALIGN	
+
 
 ; MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP
 memory_map 	dcd	 title
@@ -86,31 +78,6 @@ memory_map 	dcd	 title
 	ALIGN
 	
 ; MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP 
-
-level_1_timing dcd		0x59728379
-	ALIGN
-level_2_timing dcd		0x00000000
-	ALIGN
-level_3_timing dcd		0x00000000
-	ALIGN
-level_4_timing dcd 		0x00000000
-	ALIGN
-level_5_timing dcd 		0x00000000
-	ALIGN
-level_6_timing dcd 		0x00000000
-	ALIGN
-level_7_timing dcd 		0x00000000
-	ALIGN
-
-level_timings 	dcd level_1_timing
-				dcd level_2_timing
-				dcd level_3_timing
-				dcd level_4_timing
-				dcd level_5_timing
-				dcd level_6_timing
-				dcd level_7_timing
-	ALIGN
-		
 
 	;my variables
 prompt 		= 	"Welcome to our final project,\ncontrol your character movement with\nwasd, and place bombs with spacebar\npause the game by pressing the hardware key",10
@@ -158,8 +125,6 @@ bomb_set				= 0
 	ALIGN
 bomb_input				= 0
 	ALIGN
-bomb_exploding			= 0
-	ALIGN
 bomb_timer				= 0
 	ALIGN
 bomb_x_loc				= 0 
@@ -176,9 +141,7 @@ bomb_y_loc				= 0
 
 lab6
 	stmfd sp!, {r4 - r12, lr}
-	ldr r4, =cursor_source
-	MOV r0, #0
-	STRB r0, [r4]
+
 	bl uart_init	
 	bl interrupt_init
 	ldr r4, =prompt
@@ -1651,15 +1614,89 @@ check_for_bomb
 	ldr r4, =bomb_x_loc
 	ldrb r5, [r4]
 	cmp r5, r1
-	bne check_memory_map
+	bne check_for_explosion
 	
 	ldr r4, =bomb_y_loc
 	ldrb r5, [r4]
 	cmp r5, r2
-	bne check_memory_map
+	bne check_for_explosion
+	
+	ldr r4, =bomb_timer
+	ldrb r5, [r4]
+	cmp r5, #-1
+	moveq r0, #45					; if timer == -1 return explosion
+	beq read_char_at_position_done
 	
 	mov r0, #111
 	b read_char_at_position_done
+	
+check_for_explosion
+	ldr r4, =bomb_set
+	ldrb r5, [r4]
+	cmp r5, #1
+	bne check_memory_map
+	
+	ldr r4, =bomb_timer
+	ldrb r5, [r4]
+	cmp r5, #-1
+	bne check_memory_map
+	
+	; bomb explosion is on screen now
+	
+	; test x - range explosion
+test_x_explosion
+	ldr r4, =bomb_y_loc
+	ldrb r9, [r4]
+	cmp r9, r2
+	bne test_y_explosion	; not in line with horizontal explosion
+	
+	; char is in line with horizontal explosion
+	
+	ldr r4, =bomb_x_loc
+	ldrb r5, [r4]
+	ldr r4, =explosion_length_left
+	ldrb r6, [r4]
+	sub r7, r5, r6		;left most range
+	
+	ldr r4, =explosion_length_right
+	ldrb r6, [r4]
+	add r8, r5, r6		;right most range
+	
+	cmp r1, r7
+	blt check_memory_map
+	
+	cmp r1, r8
+	bgt check_memory_map
+	
+	mov r0, #45
+	b read_char_at_position_done
+	
+test_y_explosion
+	ldr r4, =bomb_x_loc
+	ldrb r9, [r4]
+	cmp r1, r9
+	bne check_memory_map	; not in line with vertical explosion
+	
+	; char is in line with explosion
+	
+	ldr r4, =bomb_y_loc
+	ldrb r6, [r4]
+	ldr r4, =explosion_length_down
+	ldrb r7, [r4]
+	ldr r4, =explosion_length_up
+	ldrb r8, [r4]
+	sub r7, r6, r7		; lowest y value
+	add r8, r6, r8		; highest y value
+	
+	cmp r2, r7
+	blt check_memory_map		; y < lower bound?
+	
+	cmp r2, r8
+	bgt check_memory_map		; y > upper bound?
+	
+	mov r0, #45
+	b read_char_at_position_done
+	
 		
 check_memory_map
 	ldr r4, =memory_map
@@ -1735,9 +1772,7 @@ gen_x_loc
 	ldr r1, [r0] 
 	mov r0, r1
 	lsr r0, r0, #16
-
-	;bic r0, r0, #0xFF000000
-	;bic r0, r0, #0x00FF0000
+	
 	mov r1, #25			; upper bound
 	bl div_and_mod		; potential x in r1
 	cmp r1, #1
@@ -1751,8 +1786,6 @@ gen_y_loc				; valid x in r4
 	mov r0, r1
 	lsr r0, r0, #16
 	
-	;bic r0, r0, #0xFF000000
-	;bic r0, r0, #0x00FF0000
 	mov r1, #19			; upper bound
 	bl div_and_mod		; potential y in r1
 	cmp r1, #3
