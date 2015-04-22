@@ -1146,9 +1146,9 @@ bomberman_drops_bomb
 	b done_moving_bomberman
 	
 bomberman_died
-	;handle death
-		
-	
+	ldr r4, =bomberman_died
+	mov r5, #1
+	strb r5, [r4]
 
 done_moving_bomberman
 	mov r0, #32
@@ -1261,7 +1261,9 @@ can_move_enemy_one
 	b done_moving_enemy_one
 	
 enemy_one_kills_bomberman
-	;bomberman dies
+	ldr r4, =bomberman_dead
+	mov r5, #1
+	strb r5, [r4]
 	b can_move_enemy_one
 	
 cant_move_enemy_one
@@ -1280,9 +1282,20 @@ cant_move_enemy_one
 	b enemy_one_move_loop	; try moving again with new base direction
 	
 enemy_one_died
+	ldr r4, =enemy_one_died
+	mov r5, #1
+	strb r5, [r4]
 	
+	mov r7, #0		; set for done_moving routine
+	mov r1, #0
+	mov r2, #0
 	
 done_moving_enemy_one
+
+	ldr r4, =enemy_one_direction
+	ldr r5, =enemy_one_x_loc
+	ldr r6, =enemy_one_y_loc
+	
 	strb r7, [r4]			; stores direction, x, y
 	strb r1, [r5]
 	strb r2, [r6]
@@ -1367,6 +1380,8 @@ enemy_two_move_loop
 	beq cant_move_enemy_two
 	cmp r0, #111		; bomb?
 	beq cant_move_enemy_two
+	cmp r0, #66			; bomberman
+	beq enemy_two_kills_bomberman
 	cmp r0, #45			; bomb blast horizontal 
 	beq enemy_two_died
 	cmp r0, #124		; bomb blast vertical
@@ -1380,6 +1395,12 @@ can_move_enemy_two
 	mov r0, #120
 	bl write_char_at_position
 	b done_moving_enemy_two
+	
+enemy_two_kills_bomberman
+	ldr r4, =bomberman_dead
+	mov r5, #1
+	strb r5, [r4]
+	b can_move_enemy_two
 	
 cant_move_enemy_two
 	cmp r7, #0
@@ -1397,9 +1418,20 @@ cant_move_enemy_two
 	b enemy_two_move_loop	; try moving again with new base direction
 	
 enemy_two_died
+	ldr r4, =enemy_two_died
+	mov r5, #1
+	strb r5, [r4]
 	
+	mov r7, #0		; set for done_moving routine
+	mov r1, #0
+	mov r2, #0
 	
 done_moving_enemy_two
+
+	ldr r4, =enemy_two_direction
+	ldr r5, =enemy_two_x_loc
+	ldr r6, =enemy_two_y_loc
+	
 	strb r7, [r4]			; stores direction, x, y
 	strb r1, [r5]
 	strb r2, [r6]
@@ -1486,6 +1518,8 @@ enemy_super_move_loop
 	beq cant_move_enemy_super
 	cmp r0, #111		; bomb?
 	beq cant_move_enemy_super
+	cmp r0, #66
+	beq enemy_super_kills_bomberman
 	cmp r0, #45			; bomb blast horizontal 
 	beq enemy_super_died
 	cmp r0, #124		; bomb blast vertical
@@ -1499,6 +1533,12 @@ can_move_enemy_super
 	mov r0, #120
 	bl write_char_at_position
 	b done_moving_enemy_super
+	
+enemy_super_kills_bomberman
+	ldr r4, =bomberman_dead
+	mov r5, #1
+	strb r5, [r4]
+	b can_move_enemy_super
 	
 cant_move_enemy_super
 	cmp r7, #0
@@ -1516,9 +1556,20 @@ cant_move_enemy_super
 	b enemy_super_move_loop	; try moving again with new base direction
 	
 enemy_super_died
+	ldr r4, =enemy_super_died
+	mov r5, #1
+	strb r5, [r4]
 	
+	mov r7, #0
+	mov r1, #0
+	mov r2, #0
 	
 done_moving_enemy_super
+
+	ldr r4, =enemy_two_direction
+	ldr r5, =enemy_two_x_loc
+	ldr r6, =enemy_two_y_loc
+	
 	strb r7, [r4]			; stores direction, x, y
 	strb r1, [r5]
 	strb r2, [r6]
@@ -1775,44 +1826,15 @@ draw_board_init
 	
 	mov r0, #12
 	bl write_character
-	ldr r4, =title
+	
+	mov r0, #0
+draw_board_loop
+	ldr r5, = memory_map
+	ldr r4, [r5, r0, lsl #2]
 	bl output_string
-	ldr r4, =score
-	bl output_string
-	ldr r4, =line1
-	bl output_string
-	ldr r4, =line2
-	bl output_string
-	ldr r4, =line3
-	bl output_string
-	ldr r4, =line4
-	bl output_string
-	ldr r4, =line5
-	bl output_string
-	ldr r4, =line6
-	bl output_string
-	ldr r4, =line7
-	bl output_string
-	ldr r4, =line8
-	bl output_string
-	ldr r4, =line9
-	bl output_string
-	ldr r4, =line10
-	bl output_string
-	ldr r4, =line11
-	bl output_string
-	ldr r4, =line12
-	bl output_string
-	ldr r4, =line13
-	bl output_string
-	ldr r4, =line14
-	bl output_string
-	ldr r4, =line15
-	bl output_string
-	ldr r4, =line16
-	bl output_string
-	ldr r4, =line17
-	bl output_string
+	add r0, r0, #1
+	cmp r0, #19
+	bne draw_board_loop
 	
 	ldmfd sp!, {r0, r4, lr}
 	bx lr
