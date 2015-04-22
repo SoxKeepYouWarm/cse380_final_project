@@ -1183,6 +1183,19 @@ move_enemy_one
 	
 	bl write_char_at_position
 	
+	;check if enemy one is trapped
+	mov r0, r1
+	mov r1, r2
+	bl is_enemy_trapped
+	cmp r0, #1
+	
+	moveq r0, r7
+	moveq r1, r8
+	moveq r2, r9
+	bleq write_char_at_position		; write char back to original position
+	beq done_moving_enemy_one		; branch to end of move routine
+	
+	
 enemy_one_move_loop
 	bl generate_new_random
 	ldr r3, =random_number
@@ -1225,6 +1238,8 @@ enemy_one_move_loop
 	bl read_char_at_position		;returns char at move destination to r0
 	cmp r0, #32			; empty space?
 	beq can_move_enemy_one
+	cmp r0, #66			; bomberman?
+	beq enemy_one_kills_bomberman
 	cmp r0, #90			; wall?
 	beq cant_move_enemy_one
 	cmp r0, #35			; brick?
@@ -1244,6 +1259,10 @@ can_move_enemy_one
 	mov r0, #120
 	bl write_char_at_position
 	b done_moving_enemy_one
+	
+enemy_one_kills_bomberman
+	;bomberman dies
+	b can_move_enemy_one
 	
 cant_move_enemy_one
 	cmp r7, #0
@@ -1286,6 +1305,19 @@ move_enemy_two
 	mov r2, r9	
 	
 	bl write_char_at_position
+	
+	
+	;check if enemy one is trapped
+	mov r0, r1
+	mov r1, r2
+	bl is_enemy_trapped
+	cmp r0, #1
+	
+	moveq r0, r7
+	moveq r1, r8
+	moveq r2, r9
+	bleq write_char_at_position		; write char back to original position
+	beq done_moving_enemy_one		; branch to end of move routine
 	
 enemy_two_move_loop
 	bl generate_new_random
@@ -1393,6 +1425,19 @@ move_enemy_super
 	
 	bl write_char_at_position
 	
+	
+	;check if enemy one is trapped
+	mov r0, r1
+	mov r1, r2
+	bl is_enemy_trapped
+	cmp r0, #1
+	
+	moveq r0, r7
+	moveq r1, r8
+	moveq r2, r9
+	bleq write_char_at_position		; write char back to original position
+	beq done_moving_enemy_one		; branch to end of move routine
+	
 enemy_super_move_loop
 	bl generate_new_random
 	ldr r3, =random_number
@@ -1480,6 +1525,104 @@ done_moving_enemy_super
 	ldmfd sp!, {r0 - r10, lr}
 	bx lr
 	
+
+	; pass (x, y) in r0, r1,
+	; return bool in r0
+is_enemy_trapped
+	stmfd sp!, {r1 - r4, lr}
+
+	mov r3, r1
+	mov r4, r2
+	
+	mov r1, r3
+	sub r2, r4, #1				; check above
+	bl read_char_at_position
+	
+	cmp r0, #32			; empty space?
+	moveq r0, #0
+	beq is_enemy_trapped_done
+	
+	cmp r0, #45			; bomb blast horizontal 
+	moveq r0, #0
+	beq is_enemy_trapped_done
+	
+	cmp r0, #124		; bomb blast vertical
+	moveq r0, #0
+	beq is_enemy_trapped_done
+	
+	cmp r0, #66			; bomberman
+	moveq r0, #0
+	beq is_enemy_trapped_done
+	
+	
+	mov r1, r3
+	add r2, r4, #1				; check below
+	bl read_char_at_position
+	
+	cmp r0, #32			; empty space?
+	moveq r0, #0
+	beq is_enemy_trapped_done
+	
+	cmp r0, #45			; bomb blast horizontal 
+	moveq r0, #0
+	beq is_enemy_trapped_done
+	
+	cmp r0, #124		; bomb blast vertical
+	moveq r0, #0
+	beq is_enemy_trapped_done
+	
+	cmp r0, #66			; bomberman
+	moveq r0, #0
+	beq is_enemy_trapped_done
+	
+	
+	sub r1, r3, #1
+	mov r2, r4					; check left
+	bl read_char_at_position
+	
+	cmp r0, #32			; empty space?
+	moveq r0, #0
+	beq is_enemy_trapped_done
+	
+	cmp r0, #45			; bomb blast horizontal 
+	moveq r0, #0
+	beq is_enemy_trapped_done
+	
+	cmp r0, #124		; bomb blast vertical
+	moveq r0, #0
+	beq is_enemy_trapped_done
+	
+	cmp r0, #66			; bomberman
+	moveq r0, #0
+	beq is_enemy_trapped_done
+	
+	
+	add r1, r3, #1
+	mov r2, r4					; check right
+	bl read_char_at_position
+	
+	cmp r0, #32			; empty space?
+	moveq r0, #0
+	beq is_enemy_trapped_done
+	
+	cmp r0, #45			; bomb blast horizontal 
+	moveq r0, #0
+	beq is_enemy_trapped_done
+	
+	cmp r0, #124		; bomb blast vertical
+	moveq r0, #0
+	beq is_enemy_trapped_done
+	
+	cmp r0, #66			; bomberman
+	moveq r0, #0
+	beq is_enemy_trapped_done
+	
+	;if none of those branch, enemy is trapped
+	mov r0, #1
+
+is_enemy_trapped_done
+	ldmfd sp!, {r1 - r4, lr}
+	bx lr
 	
 ;////////////////////////////////////////////////////////////////
 ;////////////////////////////////////////////////////////////////		
@@ -1705,10 +1848,6 @@ draw_board_init
 	
 	ldmfd sp!, {r0, r4, lr}
 	bx lr
-	
-	
-	
-
 	
 	
 ;////////////////////////////////////////////////////////////////
