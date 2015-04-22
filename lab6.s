@@ -104,11 +104,15 @@ bomberman_y_loc 		= 4
 	ALIGN
 bomberman_direction		= " "
 	ALIGN
+bomberman_dead			= 0
+	ALIGN
 enemy_one_x_loc			= 24
 	ALIGN
 enemy_one_y_loc			= 4
 	ALIGN
 enemy_one_direction		= 1
+	ALIGN
+enemy_one_dead			= 0
 	ALIGN
 enemy_two_x_loc 		= 2
 	ALIGN	
@@ -116,11 +120,15 @@ enemy_two_y_loc			= 18
 	ALIGN
 enemy_two_direction		= 0
 	ALIGN
+enemy_two_dead			= 0
+	ALIGN
 enemy_super_x_loc		= 24
 	ALIGN
 enemy_super_y_loc		= 18
 	ALIGN
 enemy_super_direction	= 1
+	ALIGN
+enemy_super_dead		= 0
 	ALIGN
 bomb_set				= 0
 	ALIGN
@@ -226,7 +234,7 @@ level_init
 
 game_loop
 	
-	;bl move_characters
+	
 	
 	ldr r4, =termination_condition
 	ldrb r5, [r4]
@@ -305,17 +313,43 @@ FIQ_Exit
 timer_one_mr_one_handler
 	stmfd sp!, {r0, r1, lr}
 	
-	;bl bomb_handler
+	bl bomb_handler
 	bl move_characters
 	
-	ldr r0, =termination_condition
-	ldrb r1, [r0]
+	ldr r1, =bomberman_dead
+	ldrb r0, [r1]
+	
 	cmp r1, #1
-	beq early_termination_break
+	; decrease lives
+	; if enemy living, move back to original position
+	; move bomberman back to original position
+	; update variables, dont redraw board
 	
+	; test for all enemies dead
+	ldr r1, =enemy_one_dead
+	ldrb r0, [r1]
+	cmp r0, #1
+	bne turn_complete
 	
+	ldr r1, =enemy_two_dead
+	ldrb r0, [r1]
+	cmp r0, #1
+	bne turn_complete
+	
+	ldr r1, =enemy_super_dead
+	ldrb r0, [r1]
+	cmp r0, #1
+	bne turn_complete
+	
+	; all enemies are dead
+	
+	; level up
+	; reset everything
+	
+turn_complete
 
-early_termination_break
+	; decrease timer
+	
 	ldmfd sp!, {r0, r1, lr}
 	bx lr	
 		
@@ -985,15 +1019,26 @@ remove_bomb_explosion_done
 
 
 move_characters
-	stmfd sp!, {lr}
+	stmfd sp!, {r0 - r2, lr}
 	
-	bl bomb_handler
 	bl move_bomberman
-	bl move_enemy_one
+	
+	ldr r1, =enemy_one_dead
+	ldrb r2, [r1]
+	cmp r2, #0
+	bleq move_enemy_one		; move only if alive
+	
+	ldr r1, =enemy_two_dead
+	ldrb r2, [r1]
+	cmp r2, #0
 	bl move_enemy_two
+	
+	ldr r1, =enemy_super_dead
+	ldrb r2, [r1]
+	cmp r2, #0
 	bl move_enemy_super
 	
-	ldmfd sp!, {lr}
+	ldmfd sp!, {r0 - r2, lr}
 	bx lr
 	
 move_bomberman
