@@ -6,11 +6,11 @@
 	IMPORT read_character
 	IMPORT interrupt_init
 	IMPORT div_and_mod
-	IMPORT double_game_speed
-	IMPORT halve_game_speed
+	IMPORT generate_new_random
 		
 	EXPORT FIQ_Handler
 	EXPORT lab6
+	EXPORT random_number
 
 BASE EQU 0x40000000
 	
@@ -1822,81 +1822,7 @@ gen_y_loc				; valid x in r4
 ;////////////////////////////////////////////////////////////////	
 ;////////////////////////////////////////////////////////////////		
 	
-	;save 16 - bit random to memory
-generate_new_random
-	stmfd sp!, {r0 - r3, lr}
-	
-	ldr r0, =random_number
-	ldr r1, [r0]
-	
-	ldr r2, =0xE2842335
-	mul r3, r1, r2
-	
-	ldr r2, =0x62626355
-	add r3, r3, r2
-	
-random_layer_two	; first layer random number in r3
-	
-	mov r0, r3
-	lsr r0, r0, #16
-	mov r1, #4
-	bl div_and_mod		; random (0 : 3)
-	
-	cmp r1, #0
-	beq random_layer_two_generator_one
-	cmp r1, #1
-	beq random_layer_two_generator_two
-	cmp r1, #2
-	beq random_layer_two_generator_three
-	cmp r1, #3 
-	beq random_layer_two_generator_four
-	
-random_layer_two_generator_one
-	mov r1, r3
-	
-	ldr r2, =0xF185A7B1
-	mul r3, r1, r2
-	
-	ldr r2, =0x295C7A1B
-	add r3, r3, r2
 
-	b random_generator_done
-random_layer_two_generator_two
-	mov r1, r3
-	
-	ldr r2, =0x82E278AB
-	mul r3, r1, r2
-	
-	ldr r2, =0x825EBA73
-	add r3, r3, r2
-	
-	b random_generator_done
-random_layer_two_generator_three
-	mov r1, r3
-	
-	ldr r2, =0x25174927
-	mul r3, r1, r2
-	
-	ldr r2, =0xA287B4D7
-	add r3, r3, r2
-	
-	b random_generator_done
-random_layer_two_generator_four
-	mov r1, r3
-	
-	ldr r2, =0xC4728D75
-	mul r3, r1, r2
-	
-	ldr r2, =0x398547AD
-	add r3, r3, r2
-	
-random_generator_done		; second layer random number in r3
-	
-	ldr r0, =random_number
-	str r3, [r0]
-	
-	ldmfd sp!, {r0 - r3, lr}
-	bx lr
 	
 	
 	end

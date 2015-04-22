@@ -9,12 +9,12 @@
 	EXPORT clear_display
 	EXPORT interrupt_init
 	EXPORT div_and_mod
-	;EXPORT write_char_at_position
-	EXPORT double_game_speed
-	EXPORT halve_game_speed
+	EXPORT generate_new_random
 
 	EXPORT newline
 	EXPORT store_string
+		
+	IMPORT random_number
 
 Base EQU 0x40000000
 
@@ -559,30 +559,6 @@ end_program
 	mov r1, r3		;move the remainder to return register
 	ldmfd sp!, {r2 - r7, lr}
 	bx lr	  		; Return to the C program
-
-
-
-double_game_speed
-	stmfd sp!, {r0 - r1, lr}
-	
-	ldr r0, =0xE000401C		;load mr1
-	ldr r1, [r0]
-	lsr r1, #1				;half delay time				
-	str r1, [r0]
-	
-	ldmfd sp!, {r0 - r1, lr}
-	bx lr
-	
-halve_game_speed
-	stmfd sp!, {r0 - r1, lr}
-	
-	ldr r0, =0xE000401C		;load mr1
-	ldr r1, [r0]
-	lsl r1, #1				;double delay time
-	str r1, [r0]
-	
-	ldmfd sp!, {r0 - r1, lr}
-	bx lr
 	
 
 pin_connect_block_setup_for_uart0
@@ -619,5 +595,82 @@ level_timings 	dcd level_1_timing
 				dcd level_6_timing
 				dcd level_7_timing
 	ALIGN
+
+	
+		;save 16 - bit random to memory
+generate_new_random
+	stmfd sp!, {r0 - r3, lr}
+	
+	ldr r0, =random_number
+	ldr r1, [r0]
+	
+	ldr r2, =0xE2842335
+	mul r3, r1, r2
+	
+	ldr r2, =0x62626355
+	add r3, r3, r2
+	
+random_layer_two	; first layer random number in r3
+	
+	mov r0, r3
+	lsr r0, r0, #16
+	mov r1, #4
+	bl div_and_mod		; random (0 : 3)
+	
+	cmp r1, #0
+	beq random_layer_two_generator_one
+	cmp r1, #1
+	beq random_layer_two_generator_two
+	cmp r1, #2
+	beq random_layer_two_generator_three
+	cmp r1, #3 
+	beq random_layer_two_generator_four
+	
+random_layer_two_generator_one
+	mov r1, r3
+	
+	ldr r2, =0xF185A7B1
+	mul r3, r1, r2
+	
+	ldr r2, =0x295C7A1B
+	add r3, r3, r2
+
+	b random_generator_done
+random_layer_two_generator_two
+	mov r1, r3
+	
+	ldr r2, =0x82E278AB
+	mul r3, r1, r2
+	
+	ldr r2, =0x825EBA73
+	add r3, r3, r2
+	
+	b random_generator_done
+random_layer_two_generator_three
+	mov r1, r3
+	
+	ldr r2, =0x25174927
+	mul r3, r1, r2
+	
+	ldr r2, =0xA287B4D7
+	add r3, r3, r2
+	
+	b random_generator_done
+random_layer_two_generator_four
+	mov r1, r3
+	
+	ldr r2, =0xC4728D75
+	mul r3, r1, r2
+	
+	ldr r2, =0x398547AD
+	add r3, r3, r2
+	
+random_generator_done		; second layer random number in r3
+	
+	ldr r0, =random_number
+	str r3, [r0]
+	
+	ldmfd sp!, {r0 - r3, lr}
+	bx lr
 
 	END
