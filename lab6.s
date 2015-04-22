@@ -9,6 +9,7 @@
 	IMPORT generate_new_random
 	IMPORT write_char_at_position
 	IMPORT generate_bricks
+	IMPORT draw_board_init
 		
 	EXPORT FIQ_Handler
 	EXPORT lab6
@@ -1821,23 +1822,7 @@ read_char_at_position_done
 	bx lr
 	
 	
-draw_board_init
-	stmfd sp!, {r0, r4, lr}
-	
-	mov r0, #12
-	bl write_character
-	
-	mov r0, #0
-draw_board_loop
-	ldr r5, = memory_map
-	ldr r4, [r5, r0, lsl #2]
-	bl output_string
-	add r0, r0, #1
-	cmp r0, #19
-	bne draw_board_loop
-	
-	ldmfd sp!, {r0, r4, lr}
-	bx lr
+
 	
 	
 ;////////////////////////////////////////////////////////////////

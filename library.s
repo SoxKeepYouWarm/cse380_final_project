@@ -12,6 +12,7 @@
 	EXPORT generate_new_random
 	EXPORT write_char_at_position
 	EXPORT generate_bricks
+	EXPORT draw_board_init
 		
 	IMPORT random_number
 	IMPORT memory_map
@@ -747,6 +748,25 @@ gen_y_loc				; valid x in r4
 	bne brick_gen_loop			; loop again for more bricks
 
 	ldmfd sp!, {r0 - r6, lr}
+	bx lr
+
+	
+draw_board_init
+	stmfd sp!, {r0, r4, r5, lr}
+	
+	mov r0, #12
+	bl write_character
+	
+	mov r0, #0
+draw_board_loop
+	ldr r5, = memory_map
+	ldr r4, [r5, r0, lsl #2]
+	bl output_string
+	add r0, r0, #1
+	cmp r0, #19
+	bne draw_board_loop
+	
+	ldmfd sp!, {r0, r4, r5, lr}
 	bx lr
 
 	END
