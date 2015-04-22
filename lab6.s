@@ -197,20 +197,30 @@ level_init
 	
 	; BOMB DEBUG BOMB DEBUG 
 	;////////////////////////
-	;ldr r4, =bomb_x_loc		; save current bomberman x,y 
-	;mov r8, #5
-	;strb r8, [r4]			; as bomb x, y
-	;ldr r4, =bomb_y_loc
-	;mov r9, #6
-	;strb r9, [r4]
 	
-	;ldr r4, =bomb_set		; set bomb_set to 1
-	;mov r5, #1
-	;strb r5, [r4]
+	ldr r4, =bomb_timer
+	mov r0, #0
+	strb r0, [r4]
+	ldr r1, [r4]
+	sub r1, r1, #1
+	str r1, [r4]
+	ldr r2, [r4]
 	
-	;ldr r4, =bomb_timer
-	;mov r5, #5
-	;strb r5, [r4]
+	
+	ldr r4, =bomb_x_loc		; save current bomberman x,y 
+	mov r8, #5
+	strb r8, [r4]			; as bomb x, y
+	ldr r4, =bomb_y_loc
+	mov r9, #6
+	strb r9, [r4]
+	
+	ldr r4, =bomb_set		; set bomb_set to 1
+	mov r5, #1
+	strb r5, [r4]
+	
+	ldr r4, =bomb_timer
+	mov r5, #5
+	strb r5, [r4]
 	;////////////////////////
 	
 
@@ -492,7 +502,15 @@ dont_draw_bomb		; skips draw stage
 	
 	bleq detonate_bomb				; conditional timer == 0
 	subeq r5, r5, #1
-	strbeq r5, [r4]
+	streq r5, [r4]
+	
+	;//////////////////
+	;debug
+	mov r1, #1
+	mov r2, #6
+	bl read_char_at_position
+	nop
+	;/////////////////
 	
 	cmp r5, #-1
 	bleq remove_bomb_explosion		; conditional timer < 0
@@ -969,7 +987,7 @@ remove_bomb_explosion_done
 move_characters
 	stmfd sp!, {lr}
 	
-	;bl bomb_handler
+	bl bomb_handler
 	bl move_bomberman
 	bl move_enemy_one
 	bl move_enemy_two
@@ -1431,7 +1449,7 @@ done_moving_enemy_super
 	 ;take x and y coord in r1, r2. 
 	 ;returns char at position in r0
 read_char_at_position
-	stmfd sp!, {r1 - r5, lr}
+	stmfd sp!, {r1 - r9, lr}
 	
 	;is the character bomberman?
 check_for_bomberman	
@@ -1505,7 +1523,7 @@ check_for_bomb
 	bne check_for_explosion
 	
 	ldr r4, =bomb_timer
-	ldrb r5, [r4]
+	ldr r5, [r4]
 	cmp r5, #-1
 	moveq r0, #45					; if timer == -1 return explosion
 	beq read_char_at_position_done
@@ -1520,7 +1538,7 @@ check_for_explosion
 	bne check_memory_map
 	
 	ldr r4, =bomb_timer
-	ldrb r5, [r4]
+	ldr r5, [r4]
 	cmp r5, #-1
 	bne check_memory_map
 	
@@ -1577,7 +1595,7 @@ test_y_explosion
 	cmp r2, r8
 	bgt check_memory_map		; y > upper bound?
 	
-	mov r0, #45
+	mov r0, #124
 	b read_char_at_position_done
 	
 		
@@ -1589,7 +1607,7 @@ check_memory_map
 	ldrb r0, [r5, r1]			; char at y coord shifted by x
 	
 read_char_at_position_done	
-	ldmfd sp!, {r1 - r5, lr}
+	ldmfd sp!, {r1 - r9, lr}
 	bx lr
 	
 	
