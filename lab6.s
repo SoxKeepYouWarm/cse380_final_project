@@ -1535,90 +1535,58 @@ is_enemy_trapped
 	mov r4, r2
 	
 	mov r1, r3
-	sub r2, r4, #1				; check above
-	bl read_char_at_position
-	
-	cmp r0, #32			; empty space?
-	moveq r0, #0
+	sub r2, r4, #1				
+	bl read_char_at_position	; check above
+	bl is_enemy_trapped_subroutine
+	cmp r0, #0		; can move in this direction
 	beq is_enemy_trapped_done
-	
-	cmp r0, #45			; bomb blast horizontal 
-	moveq r0, #0
-	beq is_enemy_trapped_done
-	
-	cmp r0, #124		; bomb blast vertical
-	moveq r0, #0
-	beq is_enemy_trapped_done
-	
-	cmp r0, #66			; bomberman
-	moveq r0, #0
-	beq is_enemy_trapped_done
-	
 	
 	mov r1, r3
-	add r2, r4, #1				; check below
-	bl read_char_at_position
-	
-	cmp r0, #32			; empty space?
-	moveq r0, #0
+	add r2, r4, #1
+	bl read_char_at_position	; check below
+	bl is_enemy_trapped_subroutine
+	cmp r0, #0
 	beq is_enemy_trapped_done
-	
-	cmp r0, #45			; bomb blast horizontal 
-	moveq r0, #0
-	beq is_enemy_trapped_done
-	
-	cmp r0, #124		; bomb blast vertical
-	moveq r0, #0
-	beq is_enemy_trapped_done
-	
-	cmp r0, #66			; bomberman
-	moveq r0, #0
-	beq is_enemy_trapped_done
-	
 	
 	sub r1, r3, #1
-	mov r2, r4					; check left
-	bl read_char_at_position
-	
-	cmp r0, #32			; empty space?
-	moveq r0, #0
+	mov r2, r4
+	bl read_char_at_position	; check left
+	bl is_enemy_trapped_subroutine
+	cmp r0, #0
 	beq is_enemy_trapped_done
-	
-	cmp r0, #45			; bomb blast horizontal 
-	moveq r0, #0
-	beq is_enemy_trapped_done
-	
-	cmp r0, #124		; bomb blast vertical
-	moveq r0, #0
-	beq is_enemy_trapped_done
-	
-	cmp r0, #66			; bomberman
-	moveq r0, #0
-	beq is_enemy_trapped_done
-	
 	
 	add r1, r3, #1
-	mov r2, r4					; check right
-	bl read_char_at_position
+	mov r2, r4
+	bl read_char_at_position	; check right
+	bl is_enemy_trapped_subroutine
+	cmp r0, #0
+	beq is_enemy_trapped_done
 	
+	mov r0, #1
+	b is_enemy_trapped_done
+	
+is_enemy_trapped_subroutine
 	cmp r0, #32			; empty space?
 	moveq r0, #0
-	beq is_enemy_trapped_done
+	beq is_enemy_trapped_subroutine_done
 	
 	cmp r0, #45			; bomb blast horizontal 
 	moveq r0, #0
-	beq is_enemy_trapped_done
+	beq is_enemy_trapped_subroutine_done
 	
 	cmp r0, #124		; bomb blast vertical
 	moveq r0, #0
-	beq is_enemy_trapped_done
+	beq is_enemy_trapped_subroutine_done
 	
 	cmp r0, #66			; bomberman
 	moveq r0, #0
-	beq is_enemy_trapped_done
+	beq is_enemy_trapped_subroutine_done
 	
 	;if none of those branch, enemy is trapped
 	mov r0, #1
+	
+is_enemy_trapped_subroutine_done
+	bx lr
 
 is_enemy_trapped_done
 	ldmfd sp!, {r1 - r4, lr}
