@@ -196,20 +196,20 @@ level_init
 	
 	; BOMB DEBUG BOMB DEBUG 
 	;////////////////////////
-	ldr r4, =bomb_x_loc		; save current bomberman x,y 
-	mov r8, #5
-	strb r8, [r4]			; as bomb x, y
-	ldr r4, =bomb_y_loc
-	mov r9, #6
-	strb r9, [r4]
+	;ldr r4, =bomb_x_loc		; save current bomberman x,y 
+	;mov r8, #5
+	;strb r8, [r4]			; as bomb x, y
+	;ldr r4, =bomb_y_loc
+	;mov r9, #6
+	;strb r9, [r4]
 	
-	ldr r4, =bomb_set		; set bomb_set to 1
-	mov r5, #1
-	strb r5, [r4]
+	;ldr r4, =bomb_set		; set bomb_set to 1
+	;mov r5, #1
+	;strb r5, [r4]
 	
-	ldr r4, =bomb_timer
-	mov r5, #5
-	strb r5, [r4]
+	;ldr r4, =bomb_timer
+	;mov r5, #5
+	;strb r5, [r4]
 	;////////////////////////
 	
 
@@ -968,7 +968,7 @@ remove_bomb_explosion_done
 move_characters
 	stmfd sp!, {lr}
 	
-	bl bomb_handler
+	;bl bomb_handler
 	bl move_bomberman
 	bl move_enemy_one
 	bl move_enemy_two
@@ -1085,8 +1085,12 @@ bomberman_died
 
 done_moving_bomberman
 	mov r0, #32
-	strb r0, [r4]	; clear bomberman_direction
 	
+	ldr r4, =bomberman_direction
+	ldr r5, =bomberman_x_loc
+	ldr r6, =bomberman_y_loc
+	
+	strb r0, [r4]	; clear bomberman_direction
 	strb r1, [r5]	; update bomberman x loc
 	strb r2, [r6]	; update bomberman y loc
 
