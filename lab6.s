@@ -575,9 +575,7 @@ bomb_up_not_empty
 	addeq r3, r3, #1
 	
 	; bomberman dies
-	ldr r4, =bomberman_dead
-	mov r5, #1
-	strb r5, [r4]
+	bl bomberman_dies
 	
 	; cmp r3 == 2 ( done : loop )
 	cmp r3, #2
@@ -677,9 +675,7 @@ bomb_left_not_empty
 	addeq r3, r3, #1
 	
 	; bomberman dies
-	ldr r4, =bomberman_dead
-	mov r5, #1
-	strb r5, [r4]
+	bl bomberman_dies
 	
 	; cmp r3 == 4 ( done : loop )
 	cmp r3, #4
@@ -777,9 +773,7 @@ bomb_right_not_empty
 	addeq r3, r3, #1
 	
 	; bomberman dies
-	ldr r4, =bomberman_dead
-	mov r5, #1
-	strb r5, [r4]
+	bl bomberman_dies
 	
 	; cmp r3 == 4 ( done : loop )
 	cmp r3, #4
@@ -877,9 +871,7 @@ bomb_down_not_empty
 	addeq r3, r3, #1
 	
 	; bomberman dies
-	ldr r4, =bomberman_dead
-	mov r5, #1
-	strb r5, [r1]
+	bl bomberman_dies
 	
 	; cmp r3 == 2 ( done : loop )
 	cmp r3, #2
@@ -989,7 +981,6 @@ remove_explosion_sub_loop		; remove_explosion_sub_loop
 	cmp r3, r4
 	addeq r5, r5, #1
 	beq remove_explosion_main_loop
-	
 	
 	;/////// which mapping opperation
 	cmp r5, #0
@@ -1159,9 +1150,7 @@ bomberman_drops_bomb
 	b done_moving_bomberman
 	
 bomberman_died
-	ldr r4, =bomberman_died
-	mov r5, #1
-	strb r5, [r4]
+	bl bomberman_dies
 
 done_moving_bomberman
 	mov r0, #32
@@ -1294,9 +1283,7 @@ can_move_enemy			; can_move_enemy
 	b done_moving_enemy
 	
 enemy_kills_bomberman			; enemy_kills_bomberman
-	ldr r4, =bomberman_dead
-	mov r5, #1
-	strb r5, [r4]
+	bl bomberman_dies
 	b can_move_enemy
 	
 cant_move_enemy					; cant_move_enemy
@@ -1318,21 +1305,12 @@ enemy_died						; enemy_died
 	
 	;////////////////////////
 	cmp r11, #0
-	ldreq r4, =enemy_one_dead
-	moveq r5, #1
-	strbeq r5, [r4]
 	bleq enemy_one_dies
 	
 	cmp r11, #1
-	ldreq r4, = enemy_two_dead
-	moveq r5, #1
-	strbeq r5, [r4]
 	bleq enemy_two_dies
 	
 	cmp r11, #2
-	ldreq r4, = enemy_super_dead
-	moveq r5, #1
-	strbeq r5, [r4]
 	bleq enemy_super_dies
 	;////////////////////////
 	
@@ -1434,6 +1412,11 @@ is_enemy_trapped_done
 	ldmfd sp!, {r1 - r4, lr}
 	bx lr
 	
+bomberman_dies
+	stmfd sp!, {lr}
+
+	ldmfd sp!, {lr}
+	bx lr
 	
 enemy_one_dies
 	stmfd sp!, {lr}
