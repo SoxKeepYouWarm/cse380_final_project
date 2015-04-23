@@ -391,73 +391,35 @@ pre_read_done
 main_game_read_data_handler
 	stmfd sp!, {r0 - r2, lr}
 	
-	ldr r2, =0xE000C000	;get character
-	ldrb r0, [r2]
-
+	ldr r1, =0xE000C000	;get character
+	ldrb r0, [r1]
 
 	cmp r0, #119 ; input w - set direction up
-	beq set_direction_up
+	ldreq r1, =bomberman_direction
+	strbeq r0, [r1]
 
 	cmp r0, #97	; input a - set direction left
-	beq set_direction_left
+	ldreq r1, =bomberman_direction
+	strbeq r0, [r1]
 
 	cmp r0, #115	; input s - set direction right
-	beq set_direction_right
+	ldreq r1, =bomberman_direction
+	strbeq r0, [r1]
 
 	cmp r0, #100	; input d - set direction down
-	beq set_direction_down
+	ldreq r1, =bomberman_direction
+	strbeq r0, [r1]
 	
 	cmp r0, #32		; input *space* - set bomb, unset
-	beq set_bomb_input
+	ldreq r0, =bomberman_direction
+	moveq r1, #0
+	strbeq r1, [r0]
+	
+	ldreq r0, =bomb_input
+	moveq r1, #1
+	strbeq r1, [r0]
 		
-	B read_data_handler_exit
-
-set_direction_up
-	
-	ldr r0, =bomberman_direction
-	mov r1, #119
-	strb r1, [r0]
-	
-	b read_data_handler_exit
-	   
-set_direction_left
-	
-	ldr r0, =bomberman_direction
-	mov r1, #97
-	strb r1, [r0]
-
-	b read_data_handler_exit
-	
-set_direction_right
-	
-	ldr r0, =bomberman_direction
-	mov r1, #115
-	strb r1, [r0]
-
-	b read_data_handler_exit
-	
-set_direction_down
-	
-	ldr r0, =bomberman_direction
-	mov r1, #100
-	strb r1, [r0]
-
-	b read_data_handler_exit
-	
-set_bomb_input
-
-	ldr r0, =bomberman_direction
-	mov r1, #0
-	strb r1, [r0]
-	
-	ldr r0, =bomb_input
-	mov r1, #1
-	strb r1, [r0]
-	
-	b read_data_handler_exit
-	
-read_data_handler_exit
-    ldmfd sp!, {r0 - r2, lr}
+    ldmfd sp!, {r0 - r1, lr}
     bx lr
 	
 	
