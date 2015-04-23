@@ -123,8 +123,6 @@ read_string
 read_string_loop        
     bl read_character ;reads character
     CMP r0, #13 ;checks for enter button
-	
-	;store and loop if not enter
     strbne r0, [r1], #1 ;stores the character at the address
     bne read_string_loop
 	

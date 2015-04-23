@@ -385,7 +385,7 @@ pre_game_read_data_handler
 		
 		
 main_game_read_data_handler
-	stmfd sp!, {r0 - r2, lr}
+	stmfd sp!, {r0 - r1, lr}
 	
 	ldr r1, =0xE000C000	;get character
 	ldrb r0, [r1]
@@ -398,11 +398,11 @@ main_game_read_data_handler
 	ldreq r1, =bomberman_direction
 	strbeq r0, [r1]
 
-	cmp r0, #115	; input s - set direction right
+	cmp r0, #115	; input s - set direction down
 	ldreq r1, =bomberman_direction
 	strbeq r0, [r1]
 
-	cmp r0, #100	; input d - set direction down
+	cmp r0, #100	; input d - set direction right
 	ldreq r1, =bomberman_direction
 	strbeq r0, [r1]
 	
@@ -1054,6 +1054,7 @@ move_characters
 	
 	ldmfd sp!, {r0 - r2, lr}
 	bx lr
+	;ltorg
 	
 	
 move_bomberman
