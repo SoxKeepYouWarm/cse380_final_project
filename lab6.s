@@ -1054,7 +1054,7 @@ move_characters
 	
 	ldmfd sp!, {r0 - r2, lr}
 	bx lr
-	;ltorg
+	ltorg
 	
 	
 move_bomberman
