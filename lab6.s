@@ -371,20 +371,17 @@ read_data_handler
 		
 		
 pre_game_read_data_handler
-	stmfd sp!, {r0, r1, lr}
+	stmfd sp!, {r0 - r1, lr}
 	
-	LDR r1, =0xE000C000	;get character
-	LDRB r0, [r1]
+	ldr r1, =0xE000C000		;get character
+	ldrb r0, [r1]
 	
-	cmp r0, #13
-	bne pre_read_done	; didn't input enter, don't do anything
+	cmp r0, #13	
+	ldreq r0, =initiation_condition	; input was enter
+	moveq r1, #1
+	strbeq r1, [r0]
 	
-	ldr r0, =initiation_condition	; input was enter
-	mov r1, #1
-	strb r1, [r0]
-	
-pre_read_done	
-	ldmfd sp!, {r0, r1, lr}
+	ldmfd sp!, {r0 - r1, lr}
 	bx lr
 		
 		
