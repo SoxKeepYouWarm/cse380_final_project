@@ -220,7 +220,7 @@ level_init
 	
 	
 	ldr r4, =bomb_x_loc		; save current bomberman x,y 
-	mov r8, #3
+	mov r8, #4
 	strb r8, [r4]			; as bomb x, y
 	ldr r4, =bomb_y_loc
 	mov r9, #4
@@ -1037,20 +1037,24 @@ move_characters
 	ldr r1, =enemy_one_dead
 	ldrb r2, [r1]
 	cmp r2, #0
-	bleq move_enemy_one		; move only if alive
+	moveq r0, #0		; denotes enemy_one
+	bleq move_enemy		; move only if alive
 	
 	ldr r1, =enemy_two_dead
 	ldrb r2, [r1]
 	cmp r2, #0
-	bl move_enemy_two
+	moveq r0, #1		; denotes enemy_two
+	bleq move_enemy
 	
 	ldr r1, =enemy_super_dead
 	ldrb r2, [r1]
 	cmp r2, #0
-	bl move_enemy_super
+	moveq r0, #2		; denotes enemy_super
+	bleq move_enemy
 	
 	ldmfd sp!, {r0 - r2, lr}
 	bx lr
+	
 	
 move_bomberman
 	stmfd sp!, {r0 - r9, lr}
@@ -1173,14 +1177,30 @@ done_moving_bomberman
 	bx lr
 	
 	
+	; take enemy var in r0, 
+	; (0 : enemy_one, 1 : enemy_two, 2 : enemy_super)
+move_enemy
+	stmfd sp!, {r0 - r11, lr}
 	
-move_enemy_one
-	stmfd sp!, {r0 - r10, lr}
+	mov r11, r0		; r11 will hold active enemy throughout method
 	
-	ldr r4, =enemy_one_direction
-	ldr r5, =enemy_one_x_loc
-	ldr r6, =enemy_one_y_loc
+	;//////////////////////////////
+	cmp r11, #0
+	ldreq r4, =enemy_one_direction
+	ldreq r5, =enemy_one_x_loc
+	ldreq r6, =enemy_one_y_loc
 	
+	cmp r11, #1
+	ldreq r4, =enemy_two_direction
+	ldreq r5, =enemy_two_x_loc
+	ldreq r6, =enemy_two_y_loc
+	
+	cmp r11, #2
+	ldreq r4, =enemy_super_direction
+	ldreq r5, =enemy_super_x_loc
+	ldreq r6, =enemy_super_y_loc
+	
+	;//////////////////////////////
 	ldrb r7, [r4]
 	ldrb r8, [r5]
 	ldrb r9, [r6]
@@ -1201,10 +1221,10 @@ move_enemy_one
 	moveq r1, r8
 	moveq r2, r9
 	bleq write_char_at_position		; write char back to original position
-	beq done_moving_enemy_one		; branch to end of move routine
+	beq done_moving_enemy			; branch to end of move routine
 	
 	
-enemy_one_move_loop
+enemy_move_loop
 	bl generate_new_random
 	ldr r3, =random_number
 	ldr r0, [r3]
@@ -1245,36 +1265,40 @@ enemy_one_move_loop
 	
 	bl read_char_at_position		;returns char at move destination to r0
 	cmp r0, #32			; empty space?
-	beq can_move_enemy_one
+	beq can_move_enemy
 	cmp r0, #66			; bomberman?
-	beq enemy_one_kills_bomberman
+	beq enemy_kills_bomberman
 	cmp r0, #90			; wall?
-	beq cant_move_enemy_one
+	beq cant_move_enemy
 	cmp r0, #35			; brick?
-	beq cant_move_enemy_one
+	beq cant_move_enemy
 	cmp r0, #111		; bomb?
-	beq cant_move_enemy_one
+	beq cant_move_enemy
 	cmp r0, #45			; bomb blast horizontal 
-	beq enemy_one_died
+	beq enemy_died
 	cmp r0, #124		; bomb blast vertical
-	beq enemy_one_died
+	beq enemy_died
 	cmp r0, #120		; enemy
-	beq cant_move_enemy_one
+	beq cant_move_enemy
 	cmp r0, #43			; super enemy
-	beq cant_move_enemy_one
+	beq cant_move_enemy
 	
-can_move_enemy_one
-	mov r0, #120
+can_move_enemy			; can_move_enemy
+	;////////////////
+	cmp r11, #2
+	moveq r0, #43
+	movne r0, #120
+	;////////////////
 	bl write_char_at_position
-	b done_moving_enemy_one
+	b done_moving_enemy
 	
-enemy_one_kills_bomberman
+enemy_kills_bomberman			; enemy_kills_bomberman
 	ldr r4, =bomberman_dead
 	mov r5, #1
 	strb r5, [r4]
-	b can_move_enemy_one
+	b can_move_enemy
 	
-cant_move_enemy_one
+cant_move_enemy					; cant_move_enemy
 	cmp r7, #0
 	moveq r7, #3		; invert current direction
 	
@@ -1287,10 +1311,21 @@ cant_move_enemy_one
 	cmp r7, #3
 	moveq r7, #0
 	
-	b enemy_one_move_loop	; try moving again with new base direction
+	b enemy_move_loop	; try moving again with new base direction
 	
-enemy_one_died
-	ldr r4, =enemy_one_died
+enemy_died						; enemy_died
+	
+	;////////////////////////
+	cmp r11, #0
+	ldreq r4, =enemy_one_dead
+	
+	cmp r11, #1
+	ldreq r4, = enemy_two_dead
+	
+	cmp r11, #2
+	ldreq r4, = enemy_super_dead
+	;////////////////////////
+	
 	mov r5, #1
 	strb r5, [r4]
 	
@@ -1298,286 +1333,25 @@ enemy_one_died
 	mov r1, #0
 	mov r2, #0
 	
-done_moving_enemy_one
+done_moving_enemy
 
-	ldr r4, =enemy_one_direction
-	ldr r5, =enemy_one_x_loc
-	ldr r6, =enemy_one_y_loc
-	
-	strb r7, [r4]			; stores direction, x, y
-	strb r1, [r5]
-	strb r2, [r6]
-	ldmfd sp!, {r0 - r10, lr}
-	bx lr
-	
-move_enemy_two
-	stmfd sp!, {r0 - r10, lr}
-	
-	ldr r4, =enemy_two_direction
-	ldr r5, =enemy_two_x_loc
-	ldr r6, =enemy_two_y_loc
-	
-	ldrb r7, [r4]
-	ldrb r8, [r5]
-	ldrb r9, [r6]
-	
-	mov r0, #32
-	mov r1, r8			; clear old position
-	mov r2, r9	
-	
-	bl write_char_at_position
-	
-	
-	;check if enemy one is trapped
-	mov r0, r1
-	mov r1, r2
-	bl is_enemy_trapped
-	cmp r0, #1
-	
-	moveq r0, r7
-	moveq r1, r8
-	moveq r2, r9
-	bleq write_char_at_position		; write char back to original position
-	beq done_moving_enemy_one		; branch to end of move routine
-	
-enemy_two_move_loop
-	bl generate_new_random
-	ldr r3, =random_number
-	ldr r0, [r3]
-	lsr r0, r0, #16	
-	
-	mov r1, #4
-	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
-	
-	mov r10, r1		; r10 holds new direction, r7 holds old direction
-	
-	bl generate_new_random
-	ldr r3, =random_number
-	ldr r0, [r3]
-	lsr r0, r0, #16
-	
-	mov r1, #4
-	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
-	
-	cmp r1, #3	
-	moveq r7, r10		; 1 in 4 chance to choose new direction
-	
-	cmp r7, #0		; move up?
-	moveq r1, r8
-	subeq r2, r9, #1	; negative vertical axis
-	
-	cmp r7, #1			; move left?
-	subeq r1, r8, #1
-	moveq r2, r9
-	
-	cmp r7, #2		; move right?
-	addeq r1, r8, #1
-	moveq r2, r9
-	
-	cmp r7, #3		; move down?
-	moveq r1, r8
-	addeq r2, r9, #1
-	
-	
-	bl read_char_at_position		;returns char at move destination to r0
-	cmp r0, #32			; empty space?
-	beq can_move_enemy_two
-	cmp r0, #90			; wall?
-	beq cant_move_enemy_two
-	cmp r0, #35			; brick?
-	beq cant_move_enemy_two
-	cmp r0, #111		; bomb?
-	beq cant_move_enemy_two
-	cmp r0, #66			; bomberman
-	beq enemy_two_kills_bomberman
-	cmp r0, #45			; bomb blast horizontal 
-	beq enemy_two_died
-	cmp r0, #124		; bomb blast vertical
-	beq enemy_two_died
-	cmp r0, #120		; enemy
-	beq cant_move_enemy_two
-	cmp r0, #43			; super enemy
-	beq cant_move_enemy_two
-	
-can_move_enemy_two
-	mov r0, #120
-	bl write_char_at_position
-	b done_moving_enemy_two
-	
-enemy_two_kills_bomberman
-	ldr r4, =bomberman_dead
-	mov r5, #1
-	strb r5, [r4]
-	b can_move_enemy_two
-	
-cant_move_enemy_two
-	cmp r7, #0
-	moveq r7, #3		; invert current direction
-	
-	cmp r7, #1
-	moveq r7, #2
-	
-	cmp r7, #2
-	moveq r7, #1
-	
-	cmp r7, #3
-	moveq r7, #0
-	
-	b enemy_two_move_loop	; try moving again with new base direction
-	
-enemy_two_died
-	ldr r4, =enemy_two_died
-	mov r5, #1
-	strb r5, [r4]
-	
-	mov r7, #0		; set for done_moving routine
-	mov r1, #0
-	mov r2, #0
-	
-done_moving_enemy_two
-
-	ldr r4, =enemy_two_direction
-	ldr r5, =enemy_two_x_loc
-	ldr r6, =enemy_two_y_loc
-	
-	strb r7, [r4]			; stores direction, x, y
-	strb r1, [r5]
-	strb r2, [r6]
-	ldmfd sp!, {r0 - r10, lr}
-	bx lr
-	
-	
-	
-move_enemy_super
-	stmfd sp!, {r0 - r10, lr}
-	
-	ldr r4, =enemy_super_direction
-	ldr r5, =enemy_super_x_loc
-	ldr r6, =enemy_super_y_loc
-	
-	ldrb r7, [r4]
-	ldrb r8, [r5]
-	ldrb r9, [r6]
-	
-	mov r0, #32
-	mov r1, r8			; clear old position
-	mov r2, r9	
-	
-	bl write_char_at_position
-	
-	
-	;check if enemy one is trapped
-	mov r0, r1
-	mov r1, r2
-	bl is_enemy_trapped
-	cmp r0, #1
-	
-	moveq r0, r7
-	moveq r1, r8
-	moveq r2, r9
-	bleq write_char_at_position		; write char back to original position
-	beq done_moving_enemy_one		; branch to end of move routine
-	
-enemy_super_move_loop
-	bl generate_new_random
-	ldr r3, =random_number
-	ldr r0, [r3]
-	lsr r0, r0, #16
-	
-	mov r1, #4
-	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
-	
-	mov r10, r1		; r10 holds new direction, r7 holds old direction
-	
-	bl generate_new_random
-	ldr r3, =random_number
-	ldr r0, [r3]
-	lsr r0, r0, #16
-	
-	mov r1, #4
-	bl div_and_mod				; direction 0 - 3 (W, A, S, D)
-	
-	cmp r1, #3	
-	moveq r7, r10		; 1 in 4 chance to choose new direction
-	
-	cmp r7, #0		; move up?
-	moveq r1, r8
-	subeq r2, r9, #1	; negative vertical axis
-	
-	cmp r7, #1			; move left?
-	subeq r1, r8, #1
-	moveq r2, r9
-	
-	cmp r7, #2		; move right?
-	addeq r1, r8, #1
-	moveq r2, r9
-	
-	cmp r7, #3		; move down?
-	moveq r1, r8
-	addeq r2, r9, #1
-	
-	
-	bl read_char_at_position		;returns char at move destination to r0
-	cmp r0, #32			; empty space?
-	beq can_move_enemy_super
-	cmp r0, #90			; wall?
-	beq cant_move_enemy_super
-	cmp r0, #35			; brick?
-	beq cant_move_enemy_super
-	cmp r0, #111		; bomb?
-	beq cant_move_enemy_super
-	cmp r0, #66
-	beq enemy_super_kills_bomberman
-	cmp r0, #45			; bomb blast horizontal 
-	beq enemy_super_died
-	cmp r0, #124		; bomb blast vertical
-	beq enemy_super_died
-	cmp r0, #120		; enemy
-	beq cant_move_enemy_super
-	cmp r0, #43			; super enemy
-	beq cant_move_enemy_super
-	
-can_move_enemy_super
-	mov r0, #120
-	bl write_char_at_position
-	b done_moving_enemy_super
-	
-enemy_super_kills_bomberman
-	ldr r4, =bomberman_dead
-	mov r5, #1
-	strb r5, [r4]
-	b can_move_enemy_super
-	
-cant_move_enemy_super
-	cmp r7, #0
-	moveq r7, #3		; invert current direction
-	
-	cmp r7, #1
-	moveq r7, #2
-	
-	cmp r7, #2
-	moveq r7, #1
-	
-	cmp r7, #3
-	moveq r7, #0
-	
-	b enemy_super_move_loop	; try moving again with new base direction
-	
-enemy_super_died
-	ldr r4, =enemy_super_died
-	mov r5, #1
-	strb r5, [r4]
-	
-	mov r7, #0
-	mov r1, #0
-	mov r2, #0
-	
-done_moving_enemy_super
-
-	ldr r4, =enemy_two_direction
-	ldr r5, =enemy_two_x_loc
-	ldr r6, =enemy_two_y_loc
-	
+	;//////////////////////////////
+	cmp r11, #0
+	ldreq r4, =enemy_one_direction
+	ldreq r5, =enemy_one_x_loc
+	ldreq r6, =enemy_one_y_loc
+	
+	cmp r11, #1
+	ldreq r4, =enemy_two_direction
+	ldreq r5, =enemy_two_x_loc
+	ldreq r6, =enemy_two_y_loc
+	
+	cmp r11, #2
+	ldreq r4, =enemy_super_direction
+	ldreq r5, =enemy_super_x_loc
+	ldreq r6, =enemy_super_y_loc
+	
+	;//////////////////////////////
 	strb r7, [r4]			; stores direction, x, y
 	strb r1, [r5]
 	strb r2, [r6]
@@ -1847,9 +1621,7 @@ read_char_at_position_done
 	ldmfd sp!, {r1 - r9, lr}
 	bx lr
 	
-	
 
-	
 	
 ;////////////////////////////////////////////////////////////////
 ;////////////////////////////////////////////////////////////////		
