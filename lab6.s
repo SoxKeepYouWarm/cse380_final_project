@@ -942,114 +942,75 @@ remove_bomb_explosion
 	; remove bomb explosion
 	; unset bomb_exploding
 	ldr r4, =bomb_set
-	mov r5, #0
-	strb r5, [r4]
+	mov r3, #0
+	strb r3, [r4]
 	
-remove_explosion_above
-
 	ldr r3, =bomb_x_loc
-	ldr r4, =bomb_y_loc
-
 	ldrb r1, [r3]
-	ldrb r2, [r4]
 	
-	ldr r5, =explosion_length_up
-	ldrb r4, [r5]
-	
-	mov r0, #32
-
+	ldr r3, =bomb_y_loc
+	ldrb r2, [r3]
+		
+	mov r0, #0
 	bl write_char_at_position		; clear center bomb char
 
-	mov r3, #0
-remove_explosion_above_loop
-	
-	cmp r3, r4
-	beq remove_explosion_left
-	
-	sub r2, r2, #1
-	bl write_char_at_position
-	add r3, r3, #1
-	
-	b remove_explosion_above_loop
-	
-	
-	
-remove_explosion_left
+	mov r5, #0
+remove_explosion_main_loop		; remove_explosion_main_loop
+
+	cmp r5, #4
+	beq remove_explosion_done
 
 	ldr r3, =bomb_x_loc
-	ldr r4, =bomb_y_loc
-
 	ldrb r1, [r3]
-	ldrb r2, [r4]
 	
-	ldr r5, =explosion_length_left
-	ldrb r4, [r5]
+	ldr r3, =bomb_y_loc
+	ldrb r2, [r3]
+	
+	;/////////	which explosion length var 
+	cmp r5, #0
+	ldreq r3, =explosion_length_up	; ldreq
+	
+	cmp r5, #1
+	ldreq r3, =explosion_length_left
+	
+	cmp r5, #2
+	ldreq r3, =explosion_length_right
+	
+	cmp r5, #3
+	ldreq r3, =explosion_length_down
+	;/////////
+	
+	ldrb r4, [r3]
 	
 	mov r0, #32
 	mov r3, #0
-remove_explosion_left_loop
+remove_explosion_sub_loop		; remove_explosion_sub_loop
 	
 	cmp r3, r4
-	beq remove_explosion_right
+	addeq r5, r5, #1
+	beq remove_explosion_main_loop
 	
-	sub r1, r1, #1
+	
+	;/////// which mapping opperation
+	cmp r5, #0
+	addeq r2, r2, #-1 
+	
+	cmp r5, #1
+	addeq r1, r1, #-1 
+	
+	cmp r5, #2
+	addeq r1, r1, #1  
+	
+	cmp r5, #3
+	addeq r2, r2, #1	
+	;///////
+	
 	bl write_char_at_position
 	add r3, r3, #1
 	
-	b remove_explosion_left_loop
+	b remove_explosion_sub_loop	
 	
-		
-remove_explosion_right
-
-	ldr r3, =bomb_x_loc
-	ldr r4, =bomb_y_loc
-
-	ldrb r1, [r3]
-	ldrb r2, [r4]
-	
-	ldr r5, =explosion_length_right
-	ldrb r4, [r5]
-	
-	mov r0, #32
-	mov r3, #0
-remove_explosion_right_loop
-	
-	cmp r3, r4
-	beq remove_explosion_down
-	
-	add r1, r1, #1
-	bl write_char_at_position
-	add r3, r3, #1
-	
-	b remove_explosion_right_loop
-	
-		
-remove_explosion_down
-
-	ldr r3, =bomb_x_loc
-	ldr r4, =bomb_y_loc
-
-	ldrb r1, [r3]
-	ldrb r2, [r4]
-	
-	ldr r5, =explosion_length_down
-	ldrb r4, [r5]
-	
-	mov r0, #32
-	mov r3, #0
-remove_explosion_down_loop
-	
-	cmp r3, r4
-	beq remove_bomb_explosion_done
-	
-	add r2, r2, #1
-	bl write_char_at_position
-	add r3, r3, #1
-	
-	b remove_explosion_down_loop
-	
-remove_bomb_explosion_done
-	
+remove_explosion_done
 	ldmfd sp!, {r0 - r5, lr}
 	bx lr
 	
