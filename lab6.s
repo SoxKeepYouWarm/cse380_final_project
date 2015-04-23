@@ -220,10 +220,10 @@ level_init
 	
 	
 	ldr r4, =bomb_x_loc		; save current bomberman x,y 
-	mov r8, #5
+	mov r8, #3
 	strb r8, [r4]			; as bomb x, y
 	ldr r4, =bomb_y_loc
-	mov r9, #6
+	mov r9, #4
 	strb r9, [r4]
 	
 	ldr r4, =bomb_set		; set bomb_set to 1
@@ -542,12 +542,12 @@ dont_draw_bomb		; skips draw stage
 	subeq r5, r5, #1
 	streq r5, [r4]
 	
-	;//////////////////
+	;////////////////// used to check if bomb asciis are readable at correct time
 	;debug
-	mov r1, #1
-	mov r2, #6
-	bl read_char_at_position
-	nop
+	;mov r1, #1
+	;mov r2, #6
+	;bl read_char_at_position
+	;nop
 	;/////////////////
 	
 	cmp r5, #-1
@@ -563,7 +563,7 @@ handle_bomb_done
 
 
 detonate_bomb
-	stmfd sp!, {r0 - r5, lr}
+	stmfd sp!, {r0 - r6, lr}
 
 	ALIGN
 explosion_length_up 	= 0
@@ -615,7 +615,12 @@ bomb_up_not_empty
 	bleq write_char_at_position
 	; increment r3 counter
 	addeq r3, r3, #1
+	
 	; bomberman dies
+	ldr r4, =bomberman_dead
+	mov r5, #1
+	strb r5, [r4]
+	
 	; cmp r3 == 2 ( done : loop )
 	cmp r3, #2
 	beq detonate_bomb_up_done
@@ -627,7 +632,22 @@ bomb_up_not_empty
 	bleq write_char_at_position
 	; increment r3 counter
 	addeq r3, r3, #1
+	
 	; enemy dies
+	mov r6, #0
+	ldr r4, =enemy_one_x_loc
+	ldrb r5, [r4]
+	cmp r1, r5
+	addeq r6, r6, #1
+	
+	ldr r4, =enemy_one_y_loc
+	ldrb r5, [r4]
+	cmp r2, r5
+	addeq r6, r6, #1
+	
+	cmp r6, #2
+	bleq enemy_one_dies
+	bne enemy_two_dies
 	
 	; cmp r3 == 2 ( done : loop )
 	cmp r3, #2
@@ -640,7 +660,9 @@ bomb_up_not_empty
 	bleq write_char_at_position
 	; increment r3 counter
 	add r3, r3, #1
+	
 	; super enemy dies
+	bl enemy_super_dies
 	
 	; cmp r3 == 2 ( done : loop)
 	cmp r3, #2
@@ -695,7 +717,12 @@ bomb_left_not_empty
 	bleq write_char_at_position
 	; increment r3 counter
 	addeq r3, r3, #1
+	
 	; bomberman dies
+	ldr r4, =bomberman_dead
+	mov r5, #1
+	strb r5, [r4]
+	
 	; cmp r3 == 4 ( done : loop )
 	cmp r3, #4
 	beq detonate_bomb_left_done
@@ -707,7 +734,22 @@ bomb_left_not_empty
 	bleq write_char_at_position
 	; increment r3 counter
 	addeq r3, r3, #1
+	
 	; enemy dies
+	mov r6, #0
+	ldr r4, =enemy_one_x_loc
+	ldrb r5, [r4]
+	cmp r1, r5
+	addeq r6, r6, #1
+	
+	ldr r4, =enemy_one_y_loc
+	ldrb r5, [r4]
+	cmp r2, r5
+	addeq r6, r6, #1
+	
+	cmp r6, #2
+	bleq enemy_one_dies
+	bne enemy_two_dies
 	
 	; cmp r3 == 4 ( done : loop )
 	cmp r3, #4
@@ -720,7 +762,9 @@ bomb_left_not_empty
 	bleq write_char_at_position
 	; increment r3 counter
 	add r3, r3, #1
+	
 	; super enemy dies
+	bl enemy_super_dies
 	
 	; cmp r3 == 4 ( done : loop)
 	cmp r3, #4
@@ -773,7 +817,12 @@ bomb_right_not_empty
 	bleq write_char_at_position
 	; increment r3 counter
 	addeq r3, r3, #1
+	
 	; bomberman dies
+	ldr r4, =bomberman_dead
+	mov r5, #1
+	strb r5, [r4]
+	
 	; cmp r3 == 4 ( done : loop )
 	cmp r3, #4
 	beq detonate_bomb_right_done
@@ -785,7 +834,22 @@ bomb_right_not_empty
 	bleq write_char_at_position
 	; increment r3 counter
 	addeq r3, r3, #1
+	
 	; enemy dies
+	mov r6, #0
+	ldr r4, =enemy_one_x_loc
+	ldrb r5, [r4]
+	cmp r1, r5
+	addeq r6, r6, #1
+	
+	ldr r4, =enemy_one_y_loc
+	ldrb r5, [r4]
+	cmp r2, r5
+	addeq r6, r6, #1
+	
+	cmp r6, #2
+	bleq enemy_one_dies
+	bne enemy_two_dies
 	
 	; cmp r3 == 4 ( done : loop )
 	cmp r3, #4
@@ -798,7 +862,9 @@ bomb_right_not_empty
 	bleq write_char_at_position
 	; increment r3 counter
 	add r3, r3, #1
+	
 	; super enemy dies
+	bl enemy_super_dies
 	
 	; cmp r3 == 4 ( done : loop)
 	cmp r3, #4
@@ -851,7 +917,12 @@ bomb_down_not_empty
 	bleq write_char_at_position
 	; increment r3 counter
 	addeq r3, r3, #1
+	
 	; bomberman dies
+	ldr r4, =bomberman_dead
+	mov r5, #1
+	strb r5, [r1]
+	
 	; cmp r3 == 2 ( done : loop )
 	cmp r3, #2
 	beq detonate_bomb_down_done
@@ -863,7 +934,22 @@ bomb_down_not_empty
 	bleq write_char_at_position
 	; increment r3 counter
 	addeq r3, r3, #1
+	
 	; enemy dies
+	mov r6, #0
+	ldr r4, =enemy_one_x_loc
+	ldrb r5, [r4]
+	cmp r1, r5
+	addeq r6, r6, #1
+	
+	ldr r4, =enemy_one_y_loc
+	ldrb r5, [r4]
+	cmp r2, r5
+	addeq r6, r6, #1
+	
+	cmp r6, #2
+	bleq enemy_one_dies
+	bne enemy_two_dies
 	
 	; cmp r3 == 2 ( done : loop )
 	cmp r3, #2
@@ -876,7 +962,9 @@ bomb_down_not_empty
 	bleq write_char_at_position
 	; increment r3 counter
 	add r3, r3, #1
+	
 	; super enemy dies
+	bl enemy_super_dies
 	
 	; cmp r3 == 2 ( done : loop)
 	cmp r3, #2
@@ -885,7 +973,7 @@ bomb_down_not_empty
 	
 detonate_bomb_down_done
 
-	ldmfd sp!, {r0 - r5, lr}
+	ldmfd sp!, {r0 - r6, lr}
 	bx lr
 
 
@@ -1644,6 +1732,25 @@ is_enemy_trapped_done
 	ldmfd sp!, {r1 - r4, lr}
 	bx lr
 	
+	
+enemy_one_dies
+	stmfd sp!, {lr}
+
+	ldmfd sp!, {lr}
+	bx lr
+
+enemy_two_dies
+	stmfd sp!, {lr}
+
+	ldmfd sp!, {lr}
+	bx lr
+
+enemy_super_dies
+	stmfd sp!, {lr}
+
+	ldmfd sp!, {lr}
+	bx lr
+	
 ;////////////////////////////////////////////////////////////////
 ;////////////////////////////////////////////////////////////////		
 ; MOVE_CHARACTERS MOVE_CHARACTERS MOVE_CHARACTERS MOVE_CHARACTERS
@@ -1659,6 +1766,8 @@ is_enemy_trapped_done
 	 
 	 ;take x and y coord in r1, r2. 
 	 ;returns char at position in r0
+enemy_x_id = 0
+	ALIGN
 read_char_at_position
 	stmfd sp!, {r1 - r9, lr}
 	
@@ -1689,8 +1798,12 @@ check_for_enemy_one
 	cmp r5, r2
 	bne check_for_enemy_two
 	
+	ldr r4, =enemy_x_id		; store 1 for enemy id
+	mov r5, #1
+	strb r5, [r4]
+	
 	mov r0, #120
-	b read_char_at_position
+	b read_char_at_position_done
 	
 
 check_for_enemy_two
@@ -1703,6 +1816,10 @@ check_for_enemy_two
 	ldrb r5, [r4]
 	cmp r5, r2
 	bne check_for_enemy_super
+	
+	ldr r4, =enemy_x_id
+	mov r5, #2
+	strb r5, [r4]
 	
 	mov r0, #120
 	b read_char_at_position_done
