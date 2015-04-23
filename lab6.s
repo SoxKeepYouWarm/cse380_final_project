@@ -239,7 +239,6 @@ level_init
 game_loop
 	
 	
-	
 	ldr r4, =termination_condition
 	ldrb r5, [r4]
 	cmp r5, #1
@@ -323,7 +322,7 @@ timer_one_mr_one_handler
 	ldr r1, =bomberman_dead
 	ldrb r0, [r1]
 	
-	cmp r1, #1
+	cmp r0, #1
 	; decrease lives
 	; if enemy living, move back to original position
 	; move bomberman back to original position
@@ -464,7 +463,7 @@ bomb_handler
 	ldr r4, =bomberman_y_loc
 	ldrb r6, [r4]
 	
-	cmp r5, r5
+	cmp r5, r6
 	beq dont_draw_bomb		; bomb y also == bomberman y
 	
 skip_y_test
