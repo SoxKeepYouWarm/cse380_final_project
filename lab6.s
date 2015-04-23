@@ -206,7 +206,7 @@ level_init
 	orr r5, r5, #1
 	str r5, [r4]
 	
-	
+	b skip_debug_code
 	; BOMB DEBUG BOMB DEBUG 
 	;////////////////////////
 	
@@ -234,7 +234,7 @@ level_init
 	mov r5, #5
 	strb r5, [r4]
 	;////////////////////////
-	
+skip_debug_code
 
 game_loop
 	
@@ -1318,16 +1318,24 @@ enemy_died						; enemy_died
 	;////////////////////////
 	cmp r11, #0
 	ldreq r4, =enemy_one_dead
+	moveq r5, #1
+	strbeq r5, [r4]
+	bleq enemy_one_dies
 	
 	cmp r11, #1
 	ldreq r4, = enemy_two_dead
+	moveq r5, #1
+	strbeq r5, [r4]
+	bleq enemy_two_dies
 	
 	cmp r11, #2
 	ldreq r4, = enemy_super_dead
+	moveq r5, #1
+	strbeq r5, [r4]
+	bleq enemy_super_dies
 	;////////////////////////
 	
-	mov r5, #1
-	strb r5, [r4]
+	
 	
 	mov r7, #0		; set for done_moving routine
 	mov r1, #0
@@ -1355,7 +1363,7 @@ done_moving_enemy
 	strb r7, [r4]			; stores direction, x, y
 	strb r1, [r5]
 	strb r2, [r6]
-	ldmfd sp!, {r0 - r10, lr}
+	ldmfd sp!, {r0 - r11, lr}
 	bx lr
 	
 
