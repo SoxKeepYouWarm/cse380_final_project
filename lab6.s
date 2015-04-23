@@ -1724,8 +1724,6 @@ enemy_super_dies
 	 
 	 ;take x and y coord in r1, r2. 
 	 ;returns char at position in r0
-enemy_x_id = 0
-	ALIGN
 read_char_at_position
 	stmfd sp!, {r1 - r9, lr}
 	
@@ -1756,10 +1754,6 @@ check_for_enemy_one
 	cmp r5, r2
 	bne check_for_enemy_two
 	
-	ldr r4, =enemy_x_id		; store 1 for enemy id
-	mov r5, #1
-	strb r5, [r4]
-	
 	mov r0, #120
 	b read_char_at_position_done
 	
@@ -1774,10 +1768,6 @@ check_for_enemy_two
 	ldrb r5, [r4]
 	cmp r5, r2
 	bne check_for_enemy_super
-	
-	ldr r4, =enemy_x_id
-	mov r5, #2
-	strb r5, [r4]
 	
 	mov r0, #120
 	b read_char_at_position_done
