@@ -768,19 +768,14 @@ remove_explosion_main_loop		; remove_explosion_main_loop
 	ldr r3, =bomb_y_loc
 	ldrb r2, [r3]
 	
-	;/////////	which explosion length var 
 	cmp r5, #0
 	ldreq r3, =explosion_length_up	; ldreq
-	
 	cmp r5, #1
 	ldreq r3, =explosion_length_left
-	
 	cmp r5, #2
 	ldreq r3, =explosion_length_right
-	
 	cmp r5, #3
 	ldreq r3, =explosion_length_down
-	;/////////
 	
 	ldrb r4, [r3]
 	
@@ -792,19 +787,14 @@ remove_explosion_sub_loop		; remove_explosion_sub_loop
 	addeq r5, r5, #1
 	beq remove_explosion_main_loop
 	
-	;/////// which mapping opperation
 	cmp r5, #0
 	addeq r2, r2, #-1 
-	
 	cmp r5, #1
 	addeq r1, r1, #-1 
-	
 	cmp r5, #2
 	addeq r1, r1, #1  
-	
 	cmp r5, #3
 	addeq r2, r2, #1	
-	;///////
 	
 	bl write_char_at_position
 	add r3, r3, #1
