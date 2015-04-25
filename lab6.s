@@ -543,13 +543,10 @@ detonate_bomb_length_loop ; _up_loop
 	;/////////////////		; make directional alteration
 	cmp r7, #0
 	addeq r2, r2, #-1			; move up
-	
 	cmp r7, #1
 	addeq r1, r1, #-1			; move left
-	
 	cmp r7, #2
 	add r1, r1, #1				; move right
-	
 	cmp r7, #3
 	add r2, r2, #1				; move down
 	
@@ -573,9 +570,8 @@ detonate_bomb_length_loop ; _up_loop
 	; branch should have been
 	; taken by this point
 	
-detonate_bomb_space		; space is " "
-	
-	;/////////////		; draw explosion
+	; detonate_bomb subroutines listed here:
+detonate_bomb_explosion_selector_subroutine
 	cmp r7, #0
 	moveq r0, #124
 	cmp r7, #1
@@ -584,14 +580,9 @@ detonate_bomb_space		; space is " "
 	moveq r0, #45
 	cmp r7, #3
 	moveq r0, #124
-	;/////////////
+	bx lr
 	
-	bl write_char_at_position
-	
-	; increment r3 counter
-	addeq r3, r3, #1
-	
-	;///////////////////
+detonate_bomb_max_length_selector_subroutine
 	cmp r7, #0
 	moveq r5, #2
 	cmp r7, #1
@@ -600,16 +591,9 @@ detonate_bomb_space		; space is " "
 	moveq r5, #4
 	cmp r7, #3
 	moveq r5, #2
-	;///////////////////
+	bx lr
 	
-	cmp r3, r5
-	bne detonate_bomb_length_loop		
-	
-	;/////////////////////////////		
-	
-	; if length limit hit, save length 
-	; and change direction
-	
+detonate_bomb_length_save_destination_selector_subroutine
 	cmp r7, #0
 	ldreq r5, =explosion_length_up
 	cmp r7, #1
@@ -618,10 +602,28 @@ detonate_bomb_space		; space is " "
 	ldreq r5, =explosion_length_right
 	cmp r7, #3
 	ldreq r5, =explosion_length_down
+	bx lr
 	
+	
+detonate_bomb_space		; space is " "
+	
+	bl detonate_bomb_explosion_selector_subroutine
+	bl write_char_at_position
+	
+	; increment r3 counter
+	addeq r3, r3, #1
+	
+	bl detonate_bomb_max_length_selector_subroutine
+	
+	cmp r3, r5
+	bne detonate_bomb_length_loop		
+		
+	; if length limit hit, save length 
+	; and change direction
+	
+	bl detonate_bomb_length_save_destination_selector_subroutine
 	strb r3, [r5]
 	
-	;/////////////////////////////
 	
 	add r7, r7, #1		; increment r7
 	cmp r7, #4
@@ -653,56 +655,27 @@ detonate_bomb_wall_or_brick
 	
 
 detonate_bomb_bomberman
-	;//////////////////////
-	cmp r7, #0
-	moveq r0, #124
-	cmp r7, #1
-	moveq r0, #45
-	cmp r7, #2
-	moveq r0, #45
-	cmp r7, #3
-	moveq r0, #124
-	;//////////////////////
 	
+	bl detonate_bomb_explosion_selector_subroutine
 	bl write_char_at_position
+	
 	; increment r3 counter
 	addeq r3, r3, #1
 	
 	; bomberman dies
 	bl bomberman_dies
 	
-	;///////////////////
-	cmp r7, #0
-	moveq r5, #2
-	cmp r7, #1
-	moveq r5, #4
-	cmp r7, #2
-	moveq r5, #4
-	cmp r7, #3
-	moveq r5, #2
-	;///////////////////
+	bl detonate_bomb_max_length_selector_subroutine
 	
 	cmp r3, r5
 	bne detonate_bomb_length_loop		
-	
-	;/////////////////////////////		
-	
+		
 	; if length limit hit, save length 
 	; and change direction
 	
-	cmp r7, #0
-	ldreq r5, =explosion_length_up
-	cmp r7, #1
-	ldreq r5, =explosion_length_left
-	cmp r7, #2
-	ldreq r5, =explosion_length_right
-	cmp r7, #3
-	ldreq r5, =explosion_length_down
-	
+	bl detonate_bomb_length_save_destination_selector_subroutine
 	strb r3, [r5]
-	
-	;/////////////////////////////
-	
+		
 	add r7, r7, #1		; increment r7
 	cmp r7, #4
 	beq detonate_bomb_done
@@ -710,17 +683,8 @@ detonate_bomb_bomberman
 
 
 detonate_bomb_enemy
-	;//////////////////////
-	cmp r7, #0
-	moveq r0, #124
-	cmp r7, #1
-	moveq r0, #45
-	cmp r7, #2
-	moveq r0, #45
-	cmp r7, #3
-	moveq r0, #124
-	;//////////////////////
 	
+	bl detonate_bomb_explosion_selector_subroutine
 	bl write_char_at_position
 	; increment r3 counter
 	addeq r3, r3, #1
@@ -741,38 +705,18 @@ detonate_bomb_enemy
 	bleq enemy_one_dies
 	bne enemy_two_dies
 	
-	;///////////////////
-	cmp r7, #0
-	moveq r5, #2
-	cmp r7, #1
-	moveq r5, #4
-	cmp r7, #2
-	moveq r5, #4
-	cmp r7, #3
-	moveq r5, #2
-	;///////////////////
+	bl detonate_bomb_max_length_selector_subroutine
 	
 	cmp r3, r5
 	bne detonate_bomb_length_loop		
-	
-	;/////////////////////////////		
-	
+		
 	; if length limit hit, save length 
 	; and change direction
 	
-	cmp r7, #0
-	ldreq r5, =explosion_length_up
-	cmp r7, #1
-	ldreq r5, =explosion_length_left
-	cmp r7, #2
-	ldreq r5, =explosion_length_right
-	cmp r7, #3
-	ldreq r5, =explosion_length_down
+	bl detonate_bomb_length_save_destination_selector_subroutine
 	
 	strb r3, [r5]
-	
-	;/////////////////////////////
-	
+		
 	add r7, r7, #1		; increment r7
 	cmp r7, #4
 	beq detonate_bomb_done
@@ -780,17 +724,8 @@ detonate_bomb_enemy
 	
 	
 detonate_bomb_super
-	;//////////////////////
-	cmp r7, #0
-	moveq r0, #124
-	cmp r7, #1
-	moveq r0, #45
-	cmp r7, #2
-	moveq r0, #45
-	cmp r7, #3
-	moveq r0, #124
-	;//////////////////////
 	
+	bl detonate_bomb_explosion_selector_subroutine
 	bl write_char_at_position
 	; increment r3 counter
 	addeq r3, r3, #1
@@ -798,38 +733,18 @@ detonate_bomb_super
 	; super enemy dies
 	bl enemy_super_dies
 	
-	;///////////////////
-	cmp r7, #0
-	moveq r5, #2
-	cmp r7, #1
-	moveq r5, #4
-	cmp r7, #2
-	moveq r5, #4
-	cmp r7, #3
-	moveq r5, #2
-	;///////////////////
+	bl detonate_bomb_max_length_selector_subroutine
 	
 	cmp r3, r5
 	bne detonate_bomb_length_loop		
-	
-	;/////////////////////////////		
-	
+		
 	; if length limit hit, save length 
 	; and change direction
 	
-	cmp r7, #0
-	ldreq r5, =explosion_length_up
-	cmp r7, #1
-	ldreq r5, =explosion_length_left
-	cmp r7, #2
-	ldreq r5, =explosion_length_right
-	cmp r7, #3
-	ldreq r5, =explosion_length_down
+	bl detonate_bomb_length_save_destination_selector_subroutine
 	
 	strb r3, [r5]
-	
-	;/////////////////////////////
-	
+		
 	add r7, r7, #1		; increment r7
 	cmp r7, #4
 	beq detonate_bomb_done
@@ -838,7 +753,6 @@ detonate_bomb_super
 detonate_bomb_done
 	ldmfd sp!, {r0 - r7, lr}
 	bx lr
-
 
 
 remove_bomb_explosion
