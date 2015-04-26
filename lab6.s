@@ -84,7 +84,7 @@ memory_map 	dcd	 title
 	ALIGN
 		
 		
-level_1_timing dcd		0x46500000		; .25 seconds (.50 alternating)
+level_1_timing dcd		0xE000401C		; .25 seconds (.50 alternating)0x46500000
 	ALIGN
 level_2_timing dcd		0x38400000		; .20 seconds (.40 alternating)
 	ALIGN
@@ -271,6 +271,7 @@ game_termination
 	ldmfd sp!, {r4 - r12, lr}
 	bx lr
 	
+	
 game_level_up
 	stmfd sp!, {r4 - r5, lr}
 	
@@ -286,13 +287,31 @@ game_level_up
 	ldr r4, =enemy_one_dead
 	mov r5, #0 
 	strb r5, [r4]
+	ldr r4, =enemy_one_x_loc
+	mov r5, #0
+	strb r5, [r4]
+	ldr r4, =enemy_one_y_loc
+	mov r5, #0
+	strb r5, [r4]
 	
 	ldr r4, =enemy_two_dead
 	mov r5, #0 
 	strb r5, [r5]
+	ldr r4, =enemy_two_x_loc
+	mov r5, #0
+	strb r5, [r4]
+	ldr r4, =enemy_two_y_loc
+	mov r5, #0
+	strb r5, [r4]
 	
 	ldr r4, =enemy_super_dead
 	mov r5, #0 
+	strb r5, [r4]
+	ldr r4, =enemy_super_x_loc
+	mov r5, #0
+	strb r5, [r4]
+	ldr r4, =enemy_super_y_loc
+	mov r5, #0
 	strb r5, [r4]
 	
 	; reset timer
@@ -308,7 +327,7 @@ game_level_up
 	
 	
 level_init
-	ldmfd sp!, {r0, r4 - r6, lr}
+	stmfd sp!, {r0, r4 - r6, lr}
 
 	bl draw_board_init
 	
@@ -338,9 +357,15 @@ level_init
 	
 	ldr r4, =level_timings
 	ldr r6, [r4, r5, lsl #2]	; load level timing
+	ldr r5, [r6]	; load time
 	
-	ldr r4, =0xE000401C			; store timing to match register
-	str r6, [r4]
+	;ldr r4, =0xE000401C			; store timing to match register
+	;str r5, [r4]
+	
+	;ldr r4, =0xE0004014		;timer 0
+	;ldr r5, [r4]			;enable bit 3 to generate interrupt on mr1 == tc 
+	;orr r5, r5, #0x18		;enable bit 4 to reset tc when mr1 == tc
+	;str r5, [r4]	
 	
 	ldmfd sp!, {r0, r4 - r6, lr}
 	bx lr
@@ -839,9 +864,13 @@ remove_bomb_explosion
 	
 	ldr r3, =bomb_x_loc
 	ldrb r1, [r3]
+	mov r4, #0
+	strb r4, [r3]		; set bomb location to 0
 	
 	ldr r3, =bomb_y_loc
 	ldrb r2, [r3]
+	mov r4, #0
+	strb r4, [r3]		; set bomb location to 0
 		
 	mov r0, #0
 	bl write_char_at_position		; clear center bomb char
@@ -1327,6 +1356,61 @@ bomberman_dies
 	
 	; if lives left
 	
+	; move bomberman back to initial position
+	ldr r4, =bomberman_x_loc
+	mov r5, #2
+	strb r5, [r4]
+	
+	ldr r4, =bomberman_y_loc
+	mov r5, #4
+	strb r5, [r4]
+	; revive bomberman
+	ldr r4, =bomberman_dead
+	mov r5, #0
+	strb r5, [r4]
+	
+	; move living enemies back to initial positions
+reset_enemy_one
+	ldr r4, =enemy_one_dead
+	ldrb r5, [r4]
+	cmp r5, #1
+	beq reset_enemy_two			; dont reset if dead
+	
+	ldr r4, =enemy_one_x_loc
+	mov r5, #24
+	strb r5, [r4]
+	ldr r4, =enemy_one_y_loc
+	mov r5, #4
+	strb r5, [r4]
+	
+reset_enemy_two
+	ldr r4, =enemy_two_dead
+	ldrb r5, [r4]
+	cmp r5, #1
+	beq reset_enemy_super		; dont reset if dead
+	
+	ldr r4, =enemy_two_x_loc
+	mov r5, #2
+	strb r5, [r4]
+	ldr r4, =enemy_two_y_loc
+	mov r5, #18
+	strb r5, [r4]
+	
+reset_enemy_super
+	ldr r4, =enemy_super_dead
+	ldrb r5, [r4]
+	cmp r5, #1
+	beq done_reseting_enemies	; dont reset if dead
+	
+	ldr r4, =enemy_super_x_loc
+	mov r5, #24
+	strb r5, [r4]
+	ldr r4, =enemy_super_y_loc
+	mov r5, #18
+	strb r5, [r4]
+	
+done_reseting_enemies
+	;
 	
 	
 	ldmfd sp!, {r4 - r5, lr}
