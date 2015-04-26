@@ -426,15 +426,6 @@ timer_one_mr_one_handler
 	bl bomb_handler
 	bl move_characters
 	
-	ldr r1, =bomberman_dead
-	ldrb r0, [r1]
-	
-	cmp r0, #1
-	; decrease lives
-	; if enemy living, move back to original position
-	; move bomberman back to original position
-	; update variables, dont redraw board
-	
 	; test for all enemies dead
 	ldr r1, =enemy_one_dead
 	ldrb r0, [r1]
@@ -537,7 +528,7 @@ main_game_read_data_handler
 
 	
 bomb_handler
-	stmfd sp!, {r0 - r5, lr}
+	stmfd sp!, {r0 - r6, lr}
 
 	ldr r4, =bomb_set
 	ldrb r5, [r4]
@@ -619,7 +610,7 @@ dont_draw_bomb		; skips draw stage
 	
 handle_bomb_done
 
-	ldmfd sp!, {r0 - r5, lr}
+	ldmfd sp!, {r0 - r6, lr}
 	bx lr
 
 detonate_bomb
