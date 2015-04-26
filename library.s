@@ -2,6 +2,7 @@
 	EXPORT output_string
 	EXPORT read_string
 	EXPORT display_digit
+	EXPORT LEDs
 	EXPORT pin_connect_block_setup_for_uart0
 	EXPORT uart_init
 	EXPORT write_character
@@ -85,8 +86,8 @@ interrupt_init
 	orr r5, r5, #0x40		;enable bit 6 for fast interrupt
 	str r5, [r4]			
 
-	ldr r4, =0xE000401C		;frequency = 14745600hz
-	ldr r5, =0x708000		; .5 seconds
+	ldr r4, =0xE000401C		;frequency = 14745600*(5/4)
+	ldr r5, =0x8CA000		; .5 seconds
 	str r5, [r4]			;stores speed into mr1
 
 	ldr r4, =0xE0004014		;timer 0
@@ -234,34 +235,19 @@ quit1
 	
 
 LEDs
-	STMFD SP!, {r0 - r1, r4, r7 - r8, lr}
-			
-stag2		
-	LDR r4,=newline ;add a new line
-	BL output_string 
-	BL read_string ;write number			
-	LDR r4, =store_string ;load number			
-	LDRB r0, [r4]			
-	CMP r0, #0x71 ;check if equal to q			
-	BEQ quit2;quit			
-	CMP r0, #0x51 ;check if equal to Q			
-	BEQ quit2;quit	
-led1	
-led2		
-	LDR r4, =store_string;load value
-	mov r1, #0
+	STMFD SP!, {r1 - r12, lr}
 
-led3		
-	ldrb r0, [r4],#1 
+	cmp r0, #4
+	moveq r1, #15
+	cmp r0, #3
+	moveq r1, #7
+	cmp r0, #2
+	moveq r1, #3
+	cmp r0, #1
+	moveq r1, #1
 	cmp r0, #0
-	beq led4
-	mov r7, #10; stores the value ten in a register
-	;character must be a number
-	sub r0, r0, #48 ; convert to int
-	mul r1, r7, r1 ;multiplies number holder by ten
-	add r1, r1, r0
-	b led3
-			
+	moveq r1, #0
+
 led4		
 	MOV r8, #0
 	and r7, r1, #8
@@ -294,9 +280,7 @@ led4
 	STR r0, [r4];make output						
 	LDR r4, =0xE0028014 ;load output uart			
 	STR r1, [r4] ;store value writen
-			
-	B stag2 ;go back
-quit2		
+					
 	LDMFD SP!, {R1-R12, lr}
 	BX LR
 
@@ -465,31 +449,6 @@ pin_connect_block_setup_for_uart0
     LDMFD sp!, {r0, r1, lr}
     BX lr
 	
-	
-level_1_timing dcd		0x59728379
-	ALIGN
-level_2_timing dcd		0x00000000
-	ALIGN
-level_3_timing dcd		0x00000000
-	ALIGN
-level_4_timing dcd 		0x00000000
-	ALIGN
-level_5_timing dcd 		0x00000000
-	ALIGN
-level_6_timing dcd 		0x00000000
-	ALIGN
-level_7_timing dcd 		0x00000000
-	ALIGN
-
-level_timings 	dcd level_1_timing
-				dcd level_2_timing
-				dcd level_3_timing
-				dcd level_4_timing
-				dcd level_5_timing
-				dcd level_6_timing
-				dcd level_7_timing
-	ALIGN
-
 	
 		;save 16 - bit random to memory
 generate_new_random

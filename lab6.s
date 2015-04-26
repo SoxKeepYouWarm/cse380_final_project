@@ -4,6 +4,7 @@
 	IMPORT read_string
 	IMPORT write_character
 	IMPORT read_character
+	IMPORT LEDs
 	IMPORT interrupt_init
 	IMPORT div_and_mod
 	IMPORT generate_new_random
@@ -81,6 +82,31 @@ memory_map 	dcd	 title
 			dcdu line17
 			
 	ALIGN
+		
+		
+level_1_timing dcd		0x46500000		; .25 seconds (.50 alternating)
+	ALIGN
+level_2_timing dcd		0x38400000		; .20 seconds (.40 alternating)
+	ALIGN
+level_3_timing dcd		0x38400000
+	ALIGN
+level_4_timing dcd 		0x38400000
+	ALIGN
+level_5_timing dcd 		0x38400000
+	ALIGN
+level_6_timing dcd 		0x38400000
+	ALIGN
+level_7_timing dcd 		0x38400000
+	ALIGN
+
+level_timings 	dcd level_1_timing
+				dcd level_2_timing
+				dcd level_3_timing
+				dcd level_4_timing
+				dcd level_5_timing
+				dcd level_6_timing
+				dcd level_7_timing
+	ALIGN
 	
 ; MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP MEMORY MAP 
 
@@ -97,9 +123,13 @@ game_over				= "game over"
 ;game variables
 random_number dcdu 	0x00000000
 	ALIGN
-current_level = 1
+current_level 			= 1
 	ALIGN
-
+lives					= 4
+	ALIGN
+game_timer				= 120
+	ALIGN
+		
 ;mapping variables
 
 bomberman_x_loc 		= 2
@@ -178,28 +208,7 @@ pre_game
 	ldr r6, =random_number
 	str r5, [r6]			; store tc as the first random number
 	
-level_init
-	
-	bl draw_board_init
-	
-	ldr r4, =line2			; clear escape sequence 
-	mov r5, #32				; handled chars from memory
-	strb r5, [r4, #1]
-	strb r5, [r4, #23]
-	
-	ldr r4, =line16			; fixes memory
-	mov r5, #32
-	strb r5, [r4, #1]
-	strb r5, [r4, #23]
-
-	
-	ldr r4, =current_level	;BRICK_GENERATOR
-	ldrb r5, [r4]
-	sub r5, r5, #1
-	mov r4, #3
-	mul r6, r5, r4	
-	add r0, r6, #10 	; initial number of bricks 
-	bl generate_bricks
+	bl level_init	
 
 	ldr r4, =0xE0004004		; enable timer 0 interrupt
 	ldr r5, [r4]			; used for timer interrupt
@@ -238,7 +247,6 @@ skip_debug_code
 
 game_loop
 	
-	
 	ldr r4, =termination_condition
 	ldrb r5, [r4]
 	cmp r5, #1
@@ -261,6 +269,80 @@ game_termination
 	bl output_string
 	
 	ldmfd sp!, {r4 - r12, lr}
+	bx lr
+	
+game_level_up
+	stmfd sp!, {r4 - r5, lr}
+	
+	; increase level var
+	ldr r4, =current_level
+	ldrb r5, [r4]
+	add r5, r5, #1
+	strb r5, [r4]
+	
+	; choose new timer var and reset match register
+	
+	; revive enemies
+	ldr r4, =enemy_one_dead
+	mov r5, #0 
+	strb r5, [r4]
+	
+	ldr r4, =enemy_two_dead
+	mov r5, #0 
+	strb r5, [r5]
+	
+	ldr r4, =enemy_super_dead
+	mov r5, #0 
+	strb r5, [r4]
+	
+	; reset timer
+	ldr r4, =game_timer
+	mov r5, #120
+	strb r5, [r4]
+	
+	; branch to level init to handle map and bricks
+	bl level_init
+	
+	ldmfd sp!, {r4 - r5, lr}
+	bx lr
+	
+	
+level_init
+	ldmfd sp!, {r0, r4 - r6, lr}
+
+	bl draw_board_init
+	
+	ldr r4, =line2			; clear escape sequence 
+	mov r5, #32				; handled chars from memory
+	strb r5, [r4, #1]
+	strb r5, [r4, #23]
+	
+	ldr r4, =line16			; fixes memory
+	mov r5, #32
+	strb r5, [r4, #1]
+	strb r5, [r4, #23]
+
+	
+	ldr r4, =current_level	;BRICK_GENERATOR
+	ldrb r5, [r4]
+	sub r5, r5, #1
+	mov r4, #3
+	mul r6, r5, r4	
+	add r0, r6, #10 	; initial number of bricks 
+	bl generate_bricks
+	
+	
+	ldr r4, =current_level
+	ldrb r5, [r4]
+	sub r5, r5, #1
+	
+	ldr r4, =level_timings
+	ldr r6, [r4, r5, lsl #2]	; load level timing
+	
+	ldr r4, =0xE000401C			; store timing to match register
+	str r6, [r4]
+	
+	ldmfd sp!, {r0, r4 - r6, lr}
 	bx lr
 	
 	
@@ -345,14 +427,10 @@ timer_one_mr_one_handler
 	bne turn_complete
 	
 	; all enemies are dead
-	
-	; level up
-	; reset everything
+	bl game_level_up
 	
 turn_complete
 
-	; decrease timer
-	
 	ldmfd sp!, {r0, r1, lr}
 	bx lr	
 		
@@ -541,19 +619,19 @@ explosion_length_down	= 0
 	bleq write_char_at_position
 
 	mov r7, #0		; cycle counter
-detonate_bomb_direction_loop ; _up
+detonate_bomb_direction_loop ; up, left, right, then down
 	
 	ldr r3, =bomb_x_loc
 	ldr r4, =bomb_y_loc
 	ldrb r1, [r3]
 	ldrb r2, [r4]
 	mov r3, #0			; counts explosions placed
-detonate_bomb_length_loop ; _up_loop
+detonate_bomb_length_loop 
 
 	cmp r7, #0
-	addeq r2, r2, #-1			; move up
+	addeq r2, r2, #-1				; move up
 	cmp r7, #1
-	addeq r1, r1, #-1			; move left
+	addeq r1, r1, #-1				; move left
 	cmp r7, #2
 	addeq r1, r1, #1				; move right
 	cmp r7, #3
@@ -562,7 +640,7 @@ detonate_bomb_length_loop ; _up_loop
 	
 	bl read_char_at_position
 	
-	cmp r0, #32			; empty space?
+	cmp r0, #32			
 	beq detonate_bomb_space
 	cmp r0, #90
 	beq detonate_bomb_wall_or_brick
@@ -579,14 +657,16 @@ detonate_bomb_length_loop ; _up_loop
 	; taken by this point
 	b detonate_bomb_done		;in case input isn't caught above
 	
-detonate_bomb_space		; space is " "
+detonate_bomb_space		
 	
-	bl detonate_bomb_explosion_selector_subroutine
+	;prints horizontal or vertical explosion char
+	bl detonate_bomb_explosion_selector_subroutine		
 	bl write_char_at_position
 	
 	; increment r3 counter
 	addeq r3, r3, #1
 	
+	; test length to ( 2 or 4) max length
 	bl detonate_bomb_max_length_selector_subroutine
 	
 	cmp r3, r5
@@ -598,7 +678,7 @@ detonate_bomb_space		; space is " "
 	bl detonate_bomb_length_save_destination_selector_subroutine
 	strb r3, [r5]
 	
-	add r7, r7, #1		; increment r7
+	add r7, r7, #1		; start loop in new direction
 	cmp r7, #4
 	beq detonate_bomb_done
 	bne detonate_bomb_direction_loop		
@@ -1227,27 +1307,83 @@ is_enemy_trapped_done
 	bx lr
 	
 bomberman_dies
-	stmfd sp!, {lr}
+	stmfd sp!, {r4- r5, lr}
 
-	ldmfd sp!, {lr}
+	ldr r4, =lives
+	ldrb r5, [r4]
+	sub r5, r5, #1
+	strb r5, [r4]
+	
+	; print to led's
+	mov r0, r5
+	bl LEDs
+	
+	cmp r5, #0
+	
+	; if no lives left
+	ldreq r4, =termination_condition
+	moveq r5, #1
+	strb r5, [r4]
+	
+	; if lives left
+	
+	
+	
+	ldmfd sp!, {r4 - r5, lr}
 	bx lr
 	
 enemy_one_dies
-	stmfd sp!, {lr}
+	stmfd sp!, {r4 - r5, lr}
 
-	ldmfd sp!, {lr}
+	ldr r4, =enemy_one_dead
+	mov r5, #1
+	strb r5, [r4]
+	
+	ldr r4, =enemy_one_x_loc
+	mov r5, #0
+	strb r5, [r4]
+	
+	ldr r4, =enemy_one_y_loc
+	mov r5, #0
+	strb r5, [r4]
+
+	ldmfd sp!, {r4 - r5, lr}
 	bx lr
 
 enemy_two_dies
-	stmfd sp!, {lr}
+	stmfd sp!, {r4 - r5, lr}
 
-	ldmfd sp!, {lr}
+	ldr r4, =enemy_two_dead
+	mov r5, #1
+	strb r5, [r4]
+	
+	ldr r4, =enemy_two_x_loc
+	mov r5, #0
+	strb r5, [r4]
+	
+	ldr r4, =enemy_two_y_loc
+	mov r5, #0
+	strb r5, [r4]
+
+	ldmfd sp!, {r4 - r5, lr}
 	bx lr
 
 enemy_super_dies
-	stmfd sp!, {lr}
+	stmfd sp!, {r4 - r5, lr}
 
-	ldmfd sp!, {lr}
+	ldr r4, =enemy_super_dead
+	mov r5, #1
+	strb r5, [r4]
+	
+	ldr r4, =enemy_super_x_loc
+	mov r5, #0
+	strb r5, [r4]
+	
+	ldr r4, =enemy_super_y_loc
+	mov r5, #0
+	strb r5, [r4]
+
+	ldmfd sp!, {r4 - r5, lr}
 	bx lr
 	
 ;////////////////////////////////////////////////////////////////
