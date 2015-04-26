@@ -519,22 +519,32 @@ handle_bomb_done
 	ldmfd sp!, {r0 - r5, lr}
 	bx lr
 
-
 detonate_bomb
 	stmfd sp!, {r0 - r7, lr}
 
-	ALIGN
 explosion_length_up 	= 0
 explosion_length_left 	= 0
 explosion_length_right	= 0
 explosion_length_down	= 0
+	ALIGN
 
 	ldr r3, =bomb_x_loc
 	ldr r4, =bomb_y_loc
+	ldrb r1, [r3]
+	ldrb r2, [r4]
 	
+	bl read_char_at_position
+	cmp r0, #66
+	bleq bomberman_dies
+	cmp r0, #111
+	moveq r0, #45
+	bleq write_char_at_position
+
 	mov r7, #0		; cycle counter
 detonate_bomb_direction_loop ; _up
 	
+	ldr r3, =bomb_x_loc
+	ldr r4, =bomb_y_loc
 	ldrb r1, [r3]
 	ldrb r2, [r4]
 	mov r3, #0			; counts explosions placed
@@ -545,9 +555,9 @@ detonate_bomb_length_loop ; _up_loop
 	cmp r7, #1
 	addeq r1, r1, #-1			; move left
 	cmp r7, #2
-	add r1, r1, #1				; move right
+	addeq r1, r1, #1				; move right
 	cmp r7, #3
-	add r2, r2, #1				; move down
+	addeq r2, r2, #1				; move down
 	
 	
 	bl read_char_at_position
@@ -567,7 +577,7 @@ detonate_bomb_length_loop ; _up_loop
 	
 	; branch should have been
 	; taken by this point
-	
+	b detonate_bomb_done		;in case input isn't caught above
 	
 detonate_bomb_space		; space is " "
 	
@@ -591,7 +601,7 @@ detonate_bomb_space		; space is " "
 	add r7, r7, #1		; increment r7
 	cmp r7, #4
 	beq detonate_bomb_done
-	bne detonate_bomb_direction_loop		; detonate_bomb_done
+	bne detonate_bomb_direction_loop		
 	
 	
 detonate_bomb_wall_or_brick
@@ -603,7 +613,7 @@ detonate_bomb_wall_or_brick
 	add r7, r7, #1		; increment r7
 	cmp r7, #4
 	beq detonate_bomb_done
-	bne detonate_bomb_direction_loop		; detonate_bomb_done
+	bne detonate_bomb_direction_loop		
 	
 
 detonate_bomb_bomberman
@@ -631,7 +641,7 @@ detonate_bomb_bomberman
 	add r7, r7, #1		; increment r7
 	cmp r7, #4
 	beq detonate_bomb_done
-	bne detonate_bomb_direction_loop		; detonate_bomb_done
+	bne detonate_bomb_direction_loop		
 
 
 detonate_bomb_enemy
@@ -670,7 +680,7 @@ detonate_bomb_enemy
 	add r7, r7, #1		; increment r7
 	cmp r7, #4
 	beq detonate_bomb_done
-	bne detonate_bomb_direction_loop		; detonate_bomb_done
+	bne detonate_bomb_direction_loop		
 	
 	
 detonate_bomb_super
@@ -696,7 +706,7 @@ detonate_bomb_super
 	add r7, r7, #1		; increment r7
 	cmp r7, #4
 	beq detonate_bomb_done
-	bne detonate_bomb_direction_loop		; detonate_bomb_done
+	bne detonate_bomb_direction_loop		
 	
 detonate_bomb_done
 	ldmfd sp!, {r0 - r7, lr}
@@ -757,7 +767,7 @@ remove_bomb_explosion
 	bl write_char_at_position		; clear center bomb char
 
 	mov r5, #0
-remove_explosion_main_loop		; remove_explosion_main_loop
+remove_explosion_main_loop		
 
 	cmp r5, #4
 	beq remove_explosion_done
@@ -769,7 +779,7 @@ remove_explosion_main_loop		; remove_explosion_main_loop
 	ldrb r2, [r3]
 	
 	cmp r5, #0
-	ldreq r3, =explosion_length_up	; ldreq
+	ldreq r3, =explosion_length_up	
 	cmp r5, #1
 	ldreq r3, =explosion_length_left
 	cmp r5, #2
@@ -781,7 +791,7 @@ remove_explosion_main_loop		; remove_explosion_main_loop
 	
 	mov r0, #32
 	mov r3, #0
-remove_explosion_sub_loop		; remove_explosion_sub_loop
+remove_explosion_sub_loop
 	
 	cmp r3, r4
 	addeq r5, r5, #1
@@ -946,6 +956,10 @@ bomberman_drops_bomb
 	mov r1, r8
 	mov r2, r9
 	bl write_char_at_position
+	
+	ldr r4, =bomb_input
+	mov r5, #0
+	strb r5, [r4]
 	
 	b done_moving_bomberman
 	
@@ -1187,7 +1201,7 @@ is_enemy_trapped
 	
 is_enemy_trapped_subroutine
 	cmp r0, #32			; empty space?
-	moveq r0, #0
+ 	moveq r0, #0
 	beq is_enemy_trapped_subroutine_done
 	
 	cmp r0, #45			; bomb blast horizontal 
