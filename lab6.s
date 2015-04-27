@@ -129,6 +129,8 @@ lives					= 4
 	ALIGN
 game_timer				= 120
 	ALIGN
+game_points				= 0
+	ALIGN
 		
 ;mapping variables
 
@@ -425,6 +427,7 @@ timer_one_mr_one_handler
 	
 	bl bomb_handler
 	bl move_characters
+	bl decrement_timer
 	
 	; test for all enemies dead
 	ldr r1, =enemy_one_dead
@@ -1408,9 +1411,9 @@ reset_enemy_super
 done_reseting_enemies
 	;
 	
-	
 	ldmfd sp!, {r4 - r5, lr}
 	bx lr
+	
 	
 enemy_one_dies
 	stmfd sp!, {r4 - r5, lr}
@@ -1650,6 +1653,54 @@ read_char_at_position_done
 ; BOARD_INTERACTIONS BOARD_INTERACTIONS BOARD_INTERACTIONS
 ;////////////////////////////////////////////////////////////////	
 ;////////////////////////////////////////////////////////////////		
+
+
+decrement_timer
+	stmfd sp!, {r0, r4 - r5, lr}
+
+	ldr r4, =game_timer
+	ldrb r5, [r4]
+	sub r0, r5, #1		; decrement game time, and set
+	bl set_timer
+	
+	strb r0, [r4]		; store new time
+
+	ldmfd sp!, {r0, r4 - r5, lr}
+	bx lr
+	
+	
+	; set timer to r0
+set_timer
+	stmfd sp!, {r0 - r3, lr}
+
+	mov r3, r0	; save time
+	
+	mov r1, #100
+	bl div_and_mod		; hundreds in r0
+	add r0, r0, #48		; convert to ascii
+	
+	mov r1, #9			; print number
+	mov r2, #2
+	bl write_char_at_position		
+	
+	mov r0, r3	
+	mov r1, #10
+	bl div_and_mod		; tens in r0
+	add r0, r0, #48		; convert to ascii
+	mov r3, r1			; save remainder for ones digit
+	
+	mov r1, #10			; print number
+	mov r2, #2
+	bl write_char_at_position
+	
+	mov r0, r3			; load ones digit
+	add r0, r0, #48		; convert to ascii
+	mov r1, #11
+	mov r2, #2
+	bl write_char_at_position
+
+	ldmfd sp!, {r0 - r3, lr}
+	bx lr
 	
 
 	end
