@@ -1202,18 +1202,22 @@ enemy_kills_bomberman			; enemy_kills_bomberman
 	
 cant_move_enemy					; cant_move_enemy
 	cmp r7, #0
-	moveq r7, #3		; invert current direction
+	moveq r7, #3			; invert current direction
+	beq enemy_move_loop		; try moving again with new base direction
 	
 	cmp r7, #1
 	moveq r7, #2
+	beq enemy_move_loop
 	
 	cmp r7, #2
 	moveq r7, #1
+	beq enemy_move_loop
 	
 	cmp r7, #3
 	moveq r7, #0
+	beq enemy_move_loop
 	
-	b enemy_move_loop	; try moving again with new base direction
+	b enemy_move_loop	
 	
 enemy_died						; enemy_died
 	
