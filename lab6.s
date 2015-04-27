@@ -855,13 +855,8 @@ remove_bomb_explosion
 	
 	ldr r3, =bomb_x_loc
 	ldrb r1, [r3]
-	mov r4, #0
-	strb r4, [r3]		; set bomb location to 0
-	
 	ldr r3, =bomb_y_loc
 	ldrb r2, [r3]
-	mov r4, #0
-	strb r4, [r3]		; set bomb location to 0
 		
 	mov r0, #0
 	bl write_char_at_position		; clear center bomb char
@@ -912,6 +907,14 @@ remove_explosion_sub_loop
 	b remove_explosion_sub_loop	
 	
 remove_explosion_done
+	ldr r3, =bomb_x_loc
+	mov r4, #0
+	strb r4, [r3]		; set bomb location to 0
+	
+	ldr r3, =bomb_y_loc
+	mov r4, #0
+	strb r4, [r3]		; set bomb location to 0
+	
 	ldmfd sp!, {r0 - r5, lr}
 	bx lr
 	
@@ -1216,9 +1219,7 @@ cant_move_enemy					; cant_move_enemy
 	cmp r7, #3
 	moveq r7, #0
 	beq enemy_move_loop
-	
-	b enemy_move_loop	
-	
+		
 enemy_died						; enemy_died
 	
 	;////////////////////////
