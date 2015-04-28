@@ -4,7 +4,8 @@
 	IMPORT read_string
 	IMPORT write_character
 	IMPORT read_character
-	IMPORT LEDs
+	IMPORT display_led
+	IMPORT display_digit
 	IMPORT interrupt_init
 	IMPORT div_and_mod
 	IMPORT generate_new_random
@@ -217,35 +218,8 @@ pre_game
 	orr r5, r5, #1
 	str r5, [r4]
 	
-	b skip_debug_code
-	; BOMB DEBUG BOMB DEBUG 
-	;////////////////////////
-	
-	ldr r4, =bomb_timer
-	mov r0, #0
-	strb r0, [r4]
-	ldr r1, [r4]
-	sub r1, r1, #1
-	str r1, [r4]
-	ldr r2, [r4]
-	
-	
-	ldr r4, =bomb_x_loc		; save current bomberman x,y 
-	mov r8, #4
-	strb r8, [r4]			; as bomb x, y
-	ldr r4, =bomb_y_loc
-	mov r9, #4
-	strb r9, [r4]
-	
-	ldr r4, =bomb_set		; set bomb_set to 1
-	mov r5, #1
-	strb r5, [r4]
-	
-	ldr r4, =bomb_timer
-	mov r5, #5
-	strb r5, [r4]
-	;////////////////////////
-skip_debug_code
+	bl game_display_lives
+	bl game_display_level
 
 game_loop
 	
@@ -281,6 +255,10 @@ game_level_up
 	ldr r4, =current_level
 	ldrb r5, [r4]
 	add r5, r5, #1
+	
+	mov r0, r5
+	bl game_display_level
+	
 	strb r5, [r4]
 	
 	; choose new timer var and reset match register
@@ -325,6 +303,26 @@ game_level_up
 	bl level_init
 	
 	ldmfd sp!, {r4 - r5, lr}
+	bx lr
+
+game_display_level
+	stmfd sp!, {r0, r4, lr}
+
+	ldr r4, =current_level
+	ldrb r0, [r4]
+	bl display_digit
+
+	ldmfd sp!,{r0, r4, lr}
+	bx lr
+
+game_display_lives
+	stmfd sp!, {r0, r4, lr}
+
+	ldr r4, =lives
+	ldrb r0, [r4]
+	bl display_led
+
+	ldmfd sp!, {r0, r4, lr}
 	bx lr
 	
 	
@@ -861,7 +859,7 @@ remove_bomb_explosion
 	ldr r3, =bomb_y_loc
 	ldrb r2, [r3]
 		
-	mov r0, #0
+	mov r0, #32
 	bl write_char_at_position		; clear center bomb char
 
 	mov r5, #0
@@ -1071,6 +1069,7 @@ bomberman_drops_bomb
 	
 bomberman_died
 	bl bomberman_dies
+	bl bomberman_died_so_skip_storing
 
 done_moving_bomberman
 	mov r0, #32
@@ -1082,6 +1081,8 @@ done_moving_bomberman
 	strb r0, [r4]	; clear bomberman_direction
 	strb r1, [r5]	; update bomberman x loc
 	strb r2, [r6]	; update bomberman y loc
+
+bomberman_died_so_skip_storing
 
 	ldmfd sp!, {r0 - r9, lr}
 	bx lr
@@ -1237,7 +1238,6 @@ enemy_died						; enemy_died
 	;////////////////////////
 	
 	
-	
 	mov r7, #0		; set for done_moving routine
 	mov r1, #0
 	mov r2, #0
@@ -1335,16 +1335,19 @@ is_enemy_trapped_done
 	bx lr
 	
 bomberman_dies
-	stmfd sp!, {r4- r5, lr}
+	stmfd sp!, {r0 - r2, r4- r5, lr}
 
 	ldr r4, =lives
 	ldrb r5, [r4]
 	sub r5, r5, #1
 	strb r5, [r4]
 	
+	ldr r4, =bomberman_direction
+	mov r5, #32
+	strb r5, [r4]
+
 	; print to led's
-	mov r0, r5
-	bl LEDs
+	bl game_display_lives
 	
 	cmp r5, #0
 	
@@ -1357,12 +1360,16 @@ bomberman_dies
 	
 	; move bomberman back to initial position
 	ldr r4, =bomberman_x_loc
-	mov r5, #2
-	strb r5, [r4]
+	mov r1, #2					; save new x and load r0 for write_char
+	strb r1, [r4]		
 	
 	ldr r4, =bomberman_y_loc
-	mov r5, #4
-	strb r5, [r4]
+	mov r2, #4					; save new y and load r1 for write_char
+	strb r2, [r4]
+
+	mov r0, #66
+	bl write_char_at_position
+
 	; revive bomberman
 	ldr r4, =bomberman_dead
 	mov r5, #0
@@ -1376,12 +1383,15 @@ reset_enemy_one
 	beq reset_enemy_two			; dont reset if dead
 	
 	ldr r4, =enemy_one_x_loc
-	mov r5, #24
-	strb r5, [r4]
+	mov r1, #24
+	strb r1, [r4]
 	ldr r4, =enemy_one_y_loc
-	mov r5, #4
-	strb r5, [r4]
+	mov r2, #4
+	strb r2, [r4]
 	
+	mov r0, #120
+	bl write_char_at_position
+
 reset_enemy_two
 	ldr r4, =enemy_two_dead
 	ldrb r5, [r4]
@@ -1389,11 +1399,14 @@ reset_enemy_two
 	beq reset_enemy_super		; dont reset if dead
 	
 	ldr r4, =enemy_two_x_loc
-	mov r5, #2
-	strb r5, [r4]
+	mov r1, #2
+	strb r1, [r4]
 	ldr r4, =enemy_two_y_loc
-	mov r5, #18
-	strb r5, [r4]
+	mov r2, #18
+	strb r2, [r4]
+
+	mov r0, #120
+	bl write_char_at_position
 	
 reset_enemy_super
 	ldr r4, =enemy_super_dead
@@ -1402,16 +1415,18 @@ reset_enemy_super
 	beq done_reseting_enemies	; dont reset if dead
 	
 	ldr r4, =enemy_super_x_loc
-	mov r5, #24
-	strb r5, [r4]
+	mov r1, #24
+	strb r1, [r4]
 	ldr r4, =enemy_super_y_loc
-	mov r5, #18
-	strb r5, [r4]
+	mov r2, #18
+	strb r2, [r4]
+
+	mov r0, #43
+	bl write_char_at_position
 	
 done_reseting_enemies
-	;
 	
-	ldmfd sp!, {r4 - r5, lr}
+	ldmfd sp!, {r0 - r2, r4 - r5, lr}
 	bx lr
 	
 	
@@ -1448,8 +1463,8 @@ enemy_two_dies
 	mov r5, #0
 	strb r5, [r4]
 
-	ldmfd sp!, {r4 - r5, lr}
-	bx lr
+	mov r0, #120
+	bl write_char_at_position
 
 enemy_super_dies
 	stmfd sp!, {r4 - r5, lr}
@@ -1683,9 +1698,13 @@ set_timer
 	mov r2, #2
 	bl write_char_at_position		
 	
-	mov r0, r3	
+	sub r0, r0, #48
+	cmp r0, #1			; hundreds present
+	subeq r0, r3, #100	; remove the hundred
+	movne r0, r3		; hundred not there
 	mov r1, #10
 	bl div_and_mod		; tens in r0
+	;subeq r0, r0, #10	; subtract ten tens if number is in the hundreds
 	add r0, r0, #48		; convert to ascii
 	mov r3, r1			; save remainder for ones digit
 	

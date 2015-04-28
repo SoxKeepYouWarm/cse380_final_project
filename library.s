@@ -2,7 +2,7 @@
 	EXPORT output_string
 	EXPORT read_string
 	EXPORT display_digit
-	EXPORT LEDs
+	EXPORT display_led
 	EXPORT pin_connect_block_setup_for_uart0
 	EXPORT uart_init
 	EXPORT write_character
@@ -234,7 +234,8 @@ quit1
 	
 	
 
-LEDs
+	; pass lives to be displayed in r0
+display_led	 
 	STMFD SP!, {r1 - r12, lr}
 
 	cmp r0, #4
@@ -361,6 +362,7 @@ clear_display
     BX LR
 
 
+	; pass number in r0
 display_digit
 	STMFD SP!, {r0 - r4, lr}
 	
