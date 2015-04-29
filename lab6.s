@@ -499,12 +499,12 @@ main_game_read_data_handler
 	strbeq r0, [r1]
 	
 	cmp r0, #32		; input *space* - set bomb, unset
-	moveq r1, #0
-	strbeq r1, [r0]
+	moveq r0, #0
+	strbeq r0, [r1]
 	
-	ldreq r0, =bomb_input
-	moveq r1, #1
-	strbeq r1, [r0]
+	ldreq r1, =bomb_input
+	moveq r0, #1
+	strbeq r0, [r1]
 		
     ldmfd sp!, {r0 - r1, lr}
     bx lr
