@@ -1786,7 +1786,8 @@ increase_score
 	cmp r0, #0	; brick destoryed
 	; increment score by game level
 	addeq r0, r5, r6		; add level to score
-	strbeq r0, [r5]			;store new score
+	ldr r4, =game_score
+	strbeq r0, [r4]			;store new score
 	bleq set_score
 	beq increase_score_done
 	
@@ -1795,7 +1796,8 @@ increase_score
 	mov r8, #10				; hold for mul
 	muleq r7, r6, r8		; 10 X game level 
 	addeq r0, r5, r7		; add to score
-	strbeq r0, [r5]			; store new score
+	ldr r4, =game_score
+	strbeq r0, [r4]			; store new score
 	bleq set_score
 	beq increase_score_done
 	
@@ -1803,7 +1805,8 @@ increase_score
 	; increment score by 100
 	addeq r7, r6, #100
 	addeq r0, r5, r7
-	strbeq r0, [r5]
+	ldr r4, =game_score
+	strbeq r0, [r4]
 	bleq set_score
 	beq increase_score_done
 	
@@ -1814,7 +1817,8 @@ increase_score
 	moveq r8, #25			; hold for mul
 	muleq r7, r6, r8		; 25 X lives
 	addeq r0, r5, r7
-	strbeq r0, [r5]
+	ldr r4, =game_score
+	strbeq r0, [r4]
 	bleq set_score
 	beq increase_score_done
 
@@ -1838,6 +1842,7 @@ set_score
 	mov r2, #2
 	bl write_char_at_position
 	
+	mov r0, r3
 	mov r1, #100
 	bl div_and_mod		; hundreds in r0
 	mov r3, r1			; save mod as new operating number
