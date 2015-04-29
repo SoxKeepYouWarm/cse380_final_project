@@ -130,7 +130,7 @@ lives					= 4
 	ALIGN
 game_timer				= 120
 	ALIGN
-game_points				= 0
+game_score				= 0
 	ALIGN
 		
 ;mapping variables
@@ -1692,22 +1692,19 @@ set_timer
 	
 	mov r1, #100
 	bl div_and_mod		; hundreds in r0
-	add r0, r0, #48		; convert to ascii
+	mov r3, r1			; save mod as new operating number
 	
+	add r0, r0, #48		; convert to ascii
 	mov r1, #9			; print number
 	mov r2, #2
 	bl write_char_at_position		
 	
-	sub r0, r0, #48
-	cmp r0, #1			; hundreds present
-	subeq r0, r3, #100	; remove the hundred
-	movne r0, r3		; hundred not there
+	mov r0, r3
 	mov r1, #10
 	bl div_and_mod		; tens in r0
-	;subeq r0, r0, #10	; subtract ten tens if number is in the hundreds
-	add r0, r0, #48		; convert to ascii
-	mov r3, r1			; save remainder for ones digit
+	mov r3, r1			; save mod as new operating number
 	
+	add r0, r0, #48		; convert to ascii
 	mov r1, #10			; print number
 	mov r2, #2
 	bl write_char_at_position
@@ -1715,6 +1712,102 @@ set_timer
 	mov r0, r3			; load ones digit
 	add r0, r0, #48		; convert to ascii
 	mov r1, #11
+	mov r2, #2
+	bl write_char_at_position
+
+	ldmfd sp!, {r0 - r3, lr}
+	bx lr
+	
+	
+	; pass score increment source in r0
+	; (0 : brick), (1 : enemy), 
+	; (2 : level complete), (3 : game over)
+increase_score
+	stmfd sp!, {r0, r4 - r8, lr}
+
+	ldr r4, =game_score
+	ldrb r5, [r4]
+	
+	ldr r4, =current_level
+	ldrb r6, [r4]
+
+	cmp r0, #0	; brick destoryed
+	; increment score by game level
+	addeq r0, r5, r6		; add level to score
+	strbeq r0, [r5]			;store new score
+	bleq set_score
+	beq increase_score_done
+	
+	cmp r0, #1  ; enemy killed
+	; increment score by 10 X game level
+	mov r8, #10				; hold for mul
+	muleq r7, r6, r8		; 10 X game level 
+	addeq r0, r5, r7		; add to score
+	strbeq r0, [r5]			; store new score
+	bleq set_score
+	beq increase_score_done
+	
+	cmp r0, #2	; level complete
+	; increment score by 100
+	addeq r7, r6, #100
+	addeq r0, r5, r7
+	strbeq r0, [r5]
+	bleq set_score
+	beq increase_score_done
+	
+	cmp r0, #3	; game over, check lives remaining
+	; increment score by 25 X lives remaining
+	ldreq r4, =lives
+	ldrbeq r6, [r4]
+	moveq r8, #25			; hold for mul
+	muleq r7, r6, r8		; 25 X lives
+	addeq r0, r5, r7
+	strbeq r0, [r5]
+	bleq set_score
+	beq increase_score_done
+
+increase_score_done
+	ldmfd sp!, {r0, r4 - r8, lr}
+	bx lr
+	
+	
+	; pass new score in r0
+set_score
+	stmfd sp!, {r0 - r3, lr}
+
+	mov r3, r0	; save score
+	
+	mov r1, #1000
+	bl div_and_mod		;thousands in r0
+	mov r3, r1			; save mod as new operating number
+	
+	add r0, r0, #48		; convert to ascii
+	mov r1, #19			; print number
+	mov r2, #2
+	bl write_char_at_position
+	
+	mov r1, #100
+	bl div_and_mod		; hundreds in r0
+	mov r3, r1			; save mod as new operating number
+	
+	add r0, r0, #48		; convert to ascii
+	mov r1, #20			; print number
+	mov r2, #2
+	bl write_char_at_position		
+	
+	mov r0, r3
+	mov r1, #10
+	bl div_and_mod		; tens in r0
+	mov r3, r1			; save mod as new operating number
+	
+	add r0, r0, #48		; convert to ascii
+	mov r1, #21			; print number
+	mov r2, #2
+	bl write_char_at_position
+	
+	mov r0, r3			; load ones digit
+	add r0, r0, #48		; convert to ascii
+	mov r1, #22
 	mov r2, #2
 	bl write_char_at_position
 
