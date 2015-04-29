@@ -706,6 +706,16 @@ detonate_bomb_brick
 	
 	bl detonate_bomb_explosion_selector_subroutine
 	bl write_char_at_position
+
+	stmfd sp!, {r0 - r4}
+	ldr r3, =memory_map
+	sub r1, r1, #1				; alter x, y for memory access 
+	sub r2, r2, #1
+
+	ldr r4, [r3, r2, lsl #2]
+	mov r0, #32
+	strb r0, [r4, r1]
+	ldmfd sp!, {r0 - r4}
 	
 	; increment r3 counter
 	addeq r3, r3, #1
@@ -1480,7 +1490,7 @@ enemy_one_dies
 enemy_two_dies
 	stmfd sp!, {r0, r4 - r5, lr}
 
-	ldr r4, =enemy_two_dead
+ddd	ldr r4, =enemy_two_dead
 	mov r5, #1
 	strb r5, [r4]
 	
