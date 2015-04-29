@@ -484,24 +484,21 @@ main_game_read_data_handler
 	ldr r1, =0xE000C000	;get character
 	ldrb r0, [r1]
 
+	ldr r1, =bomberman_direction
+
 	cmp r0, #119 ; input w - set direction up
-	ldreq r1, =bomberman_direction
 	strbeq r0, [r1]
 
 	cmp r0, #97	; input a - set direction left
-	ldreq r1, =bomberman_direction
 	strbeq r0, [r1]
 
 	cmp r0, #115	; input s - set direction down
-	ldreq r1, =bomberman_direction
 	strbeq r0, [r1]
 
 	cmp r0, #100	; input d - set direction right
-	ldreq r1, =bomberman_direction
 	strbeq r0, [r1]
 	
 	cmp r0, #32		; input *space* - set bomb, unset
-	ldreq r0, =bomberman_direction
 	moveq r1, #0
 	strbeq r1, [r0]
 	
@@ -593,14 +590,6 @@ dont_draw_bomb		; skips draw stage
 	bleq detonate_bomb				; conditional timer == 0
 	subeq r5, r5, #1
 	streq r5, [r4]
-	
-	;////////////////// used to check if bomb asciis are readable at correct time
-	;debug
-	;mov r1, #1
-	;mov r2, #6
-	;bl read_char_at_position
-	;nop
-	;/////////////////
 	
 	cmp r5, #-1
 	bleq remove_bomb_explosion		; conditional timer < 0
