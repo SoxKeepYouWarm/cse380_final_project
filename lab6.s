@@ -1414,6 +1414,13 @@ reset_enemy_one
 	ldrb r5, [r4]
 	cmp r5, #1
 	beq reset_enemy_two			; dont reset if dead
+
+	ldr r4, =enemy_one_x_loc   	; clear enemy at old position
+	ldrb r1, [r4]
+	ldr r4, =enemy_one_y_loc
+	ldrb r2, [r4]
+	mov r0, #32
+	bl write_char_at_position
 	
 	ldr r4, =enemy_one_x_loc
 	mov r1, #24
@@ -1430,6 +1437,13 @@ reset_enemy_two
 	ldrb r5, [r4]
 	cmp r5, #1
 	beq reset_enemy_super		; dont reset if dead
+
+	ldr r4, =enemy_two_x_loc   	; clear enemy at old position
+	ldrb r1, [r4]
+	ldr r4, =enemy_two_y_loc
+	ldrb r2, [r4]
+	mov r0, #32
+	bl write_char_at_position
 	
 	ldr r4, =enemy_two_x_loc
 	mov r1, #2
@@ -1446,6 +1460,13 @@ reset_enemy_super
 	ldrb r5, [r4]
 	cmp r5, #1
 	beq done_reseting_enemies	; dont reset if dead
+
+	ldr r4, =enemy_super_x_loc   	; clear enemy at old position
+	ldrb r1, [r4]
+	ldr r4, =enemy_super_y_loc
+	ldrb r2, [r4]
+	mov r0, #32
+	bl write_char_at_position
 	
 	ldr r4, =enemy_super_x_loc
 	mov r1, #24
