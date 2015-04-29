@@ -1229,12 +1229,15 @@ enemy_died						; enemy_died
 	;////////////////////////
 	cmp r11, #0
 	bleq enemy_one_dies
+	bleq enemy_died_so_skip_storing
 	
 	cmp r11, #1
 	bleq enemy_two_dies
+	bleq enemy_died_so_skip_storing
 	
 	cmp r11, #2
 	bleq enemy_super_dies
+	bleq enemy_died_so_skip_storing
 	;////////////////////////
 	
 	
@@ -1264,6 +1267,7 @@ done_moving_enemy
 	strb r7, [r4]			; stores direction, x, y
 	strb r1, [r5]
 	strb r2, [r6]
+enemy_died_so_skip_storing
 	ldmfd sp!, {r0 - r11, lr}
 	bx lr
 	
@@ -1333,6 +1337,7 @@ is_enemy_trapped_subroutine_done
 is_enemy_trapped_done
 	ldmfd sp!, {r1 - r4, lr}
 	bx lr
+	
 	
 bomberman_dies
 	stmfd sp!, {r0 - r2, r4- r5, lr}
