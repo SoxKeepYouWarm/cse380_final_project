@@ -659,9 +659,9 @@ detonate_bomb_length_loop
 	cmp r0, #32			
 	beq detonate_bomb_space
 	cmp r0, #90
-	beq detonate_bomb_wall_or_brick
+	beq detonate_bomb_wall
 	cmp r0, #35
-	beq detonate_bomb_wall_or_brick
+	beq detonate_bomb_brick
 	cmp r0, #66
 	beq detonate_bomb_bomberman
 	cmp r0, #120
@@ -700,7 +700,7 @@ detonate_bomb_space
 	bne detonate_bomb_direction_loop		
 	
 	
-detonate_bomb_wall_or_brick
+detonate_bomb_wall
 	; no explosion, done in this direction
 	
 	bl detonate_bomb_length_save_destination_selector_subroutine
@@ -711,6 +711,36 @@ detonate_bomb_wall_or_brick
 	beq detonate_bomb_done
 	bne detonate_bomb_direction_loop		
 	
+	
+detonate_bomb_brick
+	; destroy brick, increment score, continue loop
+	
+	bl detonate_bomb_explosion_selector_subroutine
+	bl write_char_at_position
+	
+	; increment r3 counter
+	addeq r3, r3, #1
+	
+	; increase score for brick destruction
+	mov r0, #0
+	bl increase_score
+	
+	bl detonate_bomb_max_length_selector_subroutine
+	
+	cmp r3, r5
+	bne detonate_bomb_length_loop		
+		
+	; if length limit hit, save length 
+	; and change direction
+	
+	bl detonate_bomb_length_save_destination_selector_subroutine
+	strb r3, [r5]
+		
+	add r7, r7, #1		; increment r7
+	cmp r7, #4
+	beq detonate_bomb_done
+	bne detonate_bomb_direction_loop		
+
 
 detonate_bomb_bomberman
 	
