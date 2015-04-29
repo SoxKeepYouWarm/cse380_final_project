@@ -51,13 +51,9 @@ line12 = 	"Z                       Z\n",13,0
 	ALIGN
 line13 = 	"Z Z Z Z Z Z Z Z Z Z Z Z Z\n",13,0
 	ALIGN
-line14 = 	"Z                       Z\n",13,0
+line14 = 	"Zx                     +Z\n",13,0
 	ALIGN
-line15 = 	"Z Z Z Z Z Z Z Z Z Z Z Z Z\n",13,0
-	ALIGN
-line16 = 	"Zx                     +Z\n",13,0
-	ALIGN
-line17 = 	"ZZZZZZZZZZZZZZZZZZZZZZZZZ\n",13,0
+line15 = 	"ZZZZZZZZZZZZZZZZZZZZZZZZZ\n",13,0
 	ALIGN
 
 
@@ -79,9 +75,6 @@ memory_map 	dcd	 title
 			dcdu line13
 			dcdu line14
 			dcdu line15
-			dcdu line16
-			dcdu line17
-			
 	ALIGN
 		
 		
@@ -153,7 +146,7 @@ enemy_one_dead			= 0
 	ALIGN
 enemy_two_x_loc 		= 2
 	ALIGN	
-enemy_two_y_loc			= 18
+enemy_two_y_loc			= 16
 	ALIGN
 enemy_two_direction		= 0
 	ALIGN
@@ -161,7 +154,7 @@ enemy_two_dead			= 0
 	ALIGN
 enemy_super_x_loc		= 24
 	ALIGN
-enemy_super_y_loc		= 18
+enemy_super_y_loc		= 16
 	ALIGN
 enemy_super_direction	= 1
 	ALIGN
@@ -335,7 +328,7 @@ level_init
 	strb r5, [r4, #1]
 	strb r5, [r4, #23]
 	
-	ldr r4, =line16			; fixes memory
+	ldr r4, =line14			; fixes memory
 	mov r5, #32
 	strb r5, [r4, #1]
 	strb r5, [r4, #23]
@@ -1449,7 +1442,7 @@ reset_enemy_two
 	mov r1, #2
 	strb r1, [r4]
 	ldr r4, =enemy_two_y_loc
-	mov r2, #18
+	mov r2, #16
 	strb r2, [r4]
 
 	mov r0, #120
@@ -1472,7 +1465,7 @@ reset_enemy_super
 	mov r1, #24
 	strb r1, [r4]
 	ldr r4, =enemy_super_y_loc
-	mov r2, #18
+	mov r2, #16
 	strb r2, [r4]
 
 	mov r0, #43
