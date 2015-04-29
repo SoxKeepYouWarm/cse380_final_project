@@ -1444,12 +1444,18 @@ enemy_one_dies
 	ldr r4, =enemy_one_y_loc
 	mov r5, #0
 	strb r5, [r4]
+	
+	mov r0, #120
+	bl write_char_at_position
+	
+	mov r0, #1
+	bl increase_score
 
 	ldmfd sp!, {r4 - r5, lr}
 	bx lr
 
 enemy_two_dies
-	stmfd sp!, {r4 - r5, lr}
+	stmfd sp!, {r0, r4 - r5, lr}
 
 	ldr r4, =enemy_two_dead
 	mov r5, #1
@@ -1465,9 +1471,15 @@ enemy_two_dies
 
 	mov r0, #120
 	bl write_char_at_position
+	
+	mov r0, #1
+	bl increase_score
+	
+	ldmfd sp!, {r0, r4 - r5, lr}
+	bx lr
 
 enemy_super_dies
-	stmfd sp!, {r4 - r5, lr}
+	stmfd sp!, {r0, r4 - r5, lr}
 
 	ldr r4, =enemy_super_dead
 	mov r5, #1
@@ -1480,8 +1492,14 @@ enemy_super_dies
 	ldr r4, =enemy_super_y_loc
 	mov r5, #0
 	strb r5, [r4]
+	
+	mov r0, #45
+	bl write_char_at_position
 
-	ldmfd sp!, {r4 - r5, lr}
+	mov r0, #1
+	bl increase_score
+
+	ldmfd sp!, {r0, r4 - r5, lr}
 	bx lr
 	
 ;////////////////////////////////////////////////////////////////
