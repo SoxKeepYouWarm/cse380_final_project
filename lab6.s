@@ -1465,7 +1465,7 @@ done_reseting_enemies
 	
 	
 enemy_one_dies
-	stmfd sp!, {r4 - r5, lr}
+	stmfd sp!, {r0, r4 - r5, lr}
 
 	ldr r4, =enemy_one_dead
 	mov r5, #1
@@ -1485,7 +1485,7 @@ enemy_one_dies
 	mov r0, #1
 	bl increase_score
 
-	ldmfd sp!, {r4 - r5, lr}
+	ldmfd sp!, {r0, r4 - r5, lr}
 	bx lr
 
 enemy_two_dies
