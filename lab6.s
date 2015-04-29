@@ -249,17 +249,21 @@ game_termination
 	
 	
 game_level_up
-	stmfd sp!, {r4 - r5, lr}
+	stmfd sp!, {r0, r4 - r5, lr}
 	
 	; increase level var
 	ldr r4, =current_level
 	ldrb r5, [r4]
 	add r5, r5, #1
-	
+	strb r5, [r4]
+
+	; display level on seven seg
 	mov r0, r5
 	bl game_display_level
 	
-	strb r5, [r4]
+	; increase score for level up
+	mov r0, #2
+	bl increase_score		
 	
 	; choose new timer var and reset match register
 	
@@ -268,41 +272,36 @@ game_level_up
 	mov r5, #0 
 	strb r5, [r4]
 	ldr r4, =enemy_one_x_loc
-	mov r5, #0
+	mov r5, #24
 	strb r5, [r4]
 	ldr r4, =enemy_one_y_loc
-	mov r5, #0
+	mov r5, #4
 	strb r5, [r4]
 	
 	ldr r4, =enemy_two_dead
 	mov r5, #0 
 	strb r5, [r5]
 	ldr r4, =enemy_two_x_loc
-	mov r5, #0
+	mov r5, #2
 	strb r5, [r4]
 	ldr r4, =enemy_two_y_loc
-	mov r5, #0
+	mov r5, #18
 	strb r5, [r4]
 	
 	ldr r4, =enemy_super_dead
 	mov r5, #0 
 	strb r5, [r4]
 	ldr r4, =enemy_super_x_loc
-	mov r5, #0
+	mov r5, #24
 	strb r5, [r4]
 	ldr r4, =enemy_super_y_loc
-	mov r5, #0
-	strb r5, [r4]
-	
-	; reset timer
-	ldr r4, =game_timer
-	mov r5, #120
+	mov r5, #18
 	strb r5, [r4]
 	
 	; branch to level init to handle map and bricks
 	bl level_init
 	
-	ldmfd sp!, {r4 - r5, lr}
+	ldmfd sp!, {r0, r4 - r5, lr}
 	bx lr
 
 game_display_level
