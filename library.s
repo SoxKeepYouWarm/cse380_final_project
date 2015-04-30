@@ -292,7 +292,7 @@ led4
 
 
 rgb_led
-	STMFD SP!, {r1 - r4, lr}
+	STMFD SP!, {r1, r4, lr}
 	
 stag3
 	ldr r4, =0xE002800C ; base address
@@ -337,7 +337,7 @@ ngreen
 	STR r1, [r4];print red			
 			
 quit3	
-	LDMFD SP!, {r1 - r4, lr}
+	LDMFD SP!, {r1, r4, lr}
 	BX LR
 
 
