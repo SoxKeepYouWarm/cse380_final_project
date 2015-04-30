@@ -14,6 +14,7 @@
 	EXPORT write_char_at_position
 	EXPORT generate_bricks
 	EXPORT draw_board_init
+	EXPORT rgb_led
 		
 	IMPORT random_number
 	IMPORT memory_map
@@ -287,7 +288,7 @@ led4
 
 
 
-RBG_LED
+rgb_led
 	STMFD SP!, {r0 - r4, lr}
 	
 stag3		
@@ -722,7 +723,7 @@ draw_board_loop
 	ldr r4, [r5, r0, lsl #2]
 	bl output_string
 	add r0, r0, #1
-	cmp r0, #19
+	cmp r0, #17
 	bne draw_board_loop
 	
 	ldmfd sp!, {r0, r4, r5, lr}

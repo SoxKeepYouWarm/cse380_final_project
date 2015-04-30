@@ -6,6 +6,7 @@
 	IMPORT read_character
 	IMPORT display_led
 	IMPORT display_digit
+	IMPORT rgb_led
 	IMPORT interrupt_init
 	IMPORT div_and_mod
 	IMPORT generate_new_random
@@ -191,6 +192,10 @@ lab6
 	orr r5, r5, #1
 	str r5, [r4]
 	
+	; set rgb white for pre-game
+	mov r0, #119
+	bl rgb_led
+	
 pre_game
 	
 	ldr r4, =initiation_condition		;press "ENTER" to start the game"
@@ -213,6 +218,9 @@ pre_game
 	
 	bl game_display_lives
 	bl game_display_level
+	
+	mov r0, #114
+	bl rgb_led
 
 game_loop
 	
@@ -379,6 +387,18 @@ level_init
 FIQ_Handler		
 	stmfd sp!, {r0 - r2, lr}	
 	
+EINT1			; Check for EINT1 interrupt
+	LDR r0, =0xE01FC140
+	LDR r1, [r0]
+	TST r1, #2
+	BEQ read_data_interrupt
+	stmfd sp!, {r0 - r2, lr}
+	MOV r0, #121
+	BL rgb_led
+	LDMFD SP!, {r0 - r2, lr}
+	ORR r1, r1, #2		; Clear Interrupt
+	STR r1, [r0]	
+	
 read_data_interrupt
 	LDR r0, =0xE000C008
 	LDR r1, [r0]
@@ -527,6 +547,14 @@ bomb_handler
 	
 	; bomb is set
 	
+	ldr r4, =bomb_timer
+	ldrb r5, [r4]
+	and r6, r5, #1		; check if timer is even / odd
+	cmp r6, #1
+	moveq r0, #114		; red
+	movne r0, #103		; green
+	bl rgb_led			; red if odd, green if even flashing
+	
 	; if bomb occupies position other than
 	; bomberman's position, draw to screen
 	
@@ -589,6 +617,9 @@ dont_draw_bomb		; skips draw stage
 	ldreq r4, =bomb_set
 	moveq r5, #0
 	strbeq r5, [r4]
+	
+	moveq r0, #103		; green
+	bleq rgb_led
 	
 handle_bomb_done
 
