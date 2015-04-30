@@ -373,8 +373,7 @@ display_digit
 	STR r1, [r4, #0xC] ; IOCLR
 	
 	LDR r3, =digits_SET
-	MOV r0, r0, LSL #2 ; multiply by 4
-	LDR r2, [r3, r0]
+	LDR r2, [r3, r0, lsl #2]
 	STR r2, [r4, #4] ; store to IOSET
 
 	LDMFD SP!, {r0 - r4, lr}
