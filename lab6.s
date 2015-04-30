@@ -171,6 +171,12 @@ bomb_x_loc				= 0
 	ALIGN
 bomb_y_loc				= 0
 	ALIGN
+pause_button			= 0
+	ALIGN
+pause 					= "PAUSE",0
+	ALIGN
+blank 					= "     ",0
+	ALIGN
 
 ;////////////////////////////////////////////////////////////////
 ;////////////////////////////////////////////////////////////////		
@@ -185,7 +191,7 @@ lab6
 	bl uart_init	
 	bl interrupt_init
 	ldr r4, =prompt
-	;bl output_string
+	bl output_string
 	
 	ldr r4, =0xE0008004		; enable timer 1 interrupt
 	ldr r5, [r4]			; used to generate random seed
@@ -195,6 +201,9 @@ lab6
 	; set rgb white for pre-game
 	mov r0, #119
 	bl rgb_led
+
+	mov r0, #0
+	bl display_digit
 	
 pre_game
 	
@@ -219,7 +228,7 @@ pre_game
 	bl game_display_lives
 	bl game_display_level
 	
-	mov r0, #114
+	mov r0, #104
 	bl rgb_led
 
 game_loop
@@ -268,6 +277,16 @@ game_level_up
 	
 	; choose new timer var and reset match register
 	
+	; reset bomberman
+	ldr r4, =bomberman_x_loc
+	mov r5, #2
+	strb r5, [r4]
+	ldr r4, =bomberman_y_loc
+	mov r5, #4
+	strb r5, [r4]
+	
+	
+	
 	; revive enemies
 	ldr r4, =enemy_one_dead
 	mov r5, #0 
@@ -281,12 +300,12 @@ game_level_up
 	
 	ldr r4, =enemy_two_dead
 	mov r5, #0 
-	strb r5, [r5]
+	strb r5, [r4]
 	ldr r4, =enemy_two_x_loc
 	mov r5, #2
 	strb r5, [r4]
 	ldr r4, =enemy_two_y_loc
-	mov r5, #18
+	mov r5, #16
 	strb r5, [r4]
 	
 	ldr r4, =enemy_super_dead
@@ -296,7 +315,7 @@ game_level_up
 	mov r5, #24
 	strb r5, [r4]
 	ldr r4, =enemy_super_y_loc
-	mov r5, #18
+	mov r5, #16
 	strb r5, [r4]
 	
 	; branch to level init to handle map and bricks
@@ -398,6 +417,8 @@ EINT1			; Check for EINT1 interrupt
 	LDMFD SP!, {r0 - r2, lr}
 	ORR r1, r1, #2		; Clear Interrupt
 	STR r1, [r0]	
+
+	b FIQ_Exit
 	
 read_data_interrupt
 	LDR r0, =0xE000C008
@@ -608,7 +629,9 @@ dont_draw_bomb		; skips draw stage
 	subgt r5, r5, #1				; conditional timer > 0
 	strbgt r5, [r4]
 	
-	bleq detonate_bomb				; conditional timer == 0
+	; DEBUG DEBUG DEBUG DEBUG DEBUG
+	bleq game_level_up
+	;bleq detonate_bomb				; conditional timer == 0
 	subeq r5, r5, #1
 	streq r5, [r4]
 	
@@ -814,7 +837,7 @@ detonate_bomb_enemy
 	
 	cmp r6, #2
 	bleq enemy_one_dies
-	bne enemy_two_dies
+	blne enemy_two_dies
 	
 	bl detonate_bomb_max_length_selector_subroutine
 	
@@ -1523,8 +1546,8 @@ enemy_one_dies
 	mov r5, #0
 	strb r5, [r4]
 	
-	mov r0, #120
-	bl write_char_at_position
+	;mov r0, #120
+	;bl write_char_at_position
 	
 	mov r0, #1
 	bl increase_score
@@ -1535,7 +1558,7 @@ enemy_one_dies
 enemy_two_dies
 	stmfd sp!, {r0, r4 - r5, lr}
 
-ddd	ldr r4, =enemy_two_dead
+	ldr r4, =enemy_two_dead
 	mov r5, #1
 	strb r5, [r4]
 	
@@ -1547,8 +1570,8 @@ ddd	ldr r4, =enemy_two_dead
 	mov r5, #0
 	strb r5, [r4]
 
-	mov r0, #120
-	bl write_char_at_position
+	;mov r0, #120
+	;bl write_char_at_position
 	
 	mov r0, #1
 	bl increase_score

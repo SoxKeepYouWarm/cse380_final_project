@@ -66,6 +66,9 @@ uart_init
 	ldr r4, =0xE000C00C
    	MOV r5, #3
    	STRB r5, [r4]
+
+	bl clear_display
+
  	LDMFD SP!, {R4 - R5, lr}
 	BX lr
 
@@ -242,11 +245,11 @@ display_led
 	cmp r0, #4
 	moveq r1, #15
 	cmp r0, #3
-	moveq r1, #7
+	moveq r1, #14
 	cmp r0, #2
-	moveq r1, #3
+	moveq r1, #12
 	cmp r0, #1
-	moveq r1, #1
+	moveq r1, #8
 	cmp r0, #0
 	moveq r1, #0
 
@@ -289,26 +292,13 @@ led4
 
 
 rgb_led
-	STMFD SP!, {r0 - r4, lr}
+	STMFD SP!, {r1 - r4, lr}
 	
-stag3		
-	LDR r4, =newline ;newline			
-	BL output_string ;print new line			
-	BL read_string ;write to terminal			
-	LDR r4, =store_string ;read what was writen			
-	LDRB r0, [r4] ;load what was writen			
-	CMP r0, #0x71 ;checks if q			
-	BEQ quit3; if q exit		
-	CMP r0, #0x51 ;checks if Q			
-	BEQ quit3; if Q exit			
-			
-	LDR r4, =0xE0028008;load what depends to write or read			
-	MOV r1, #0x00260000;load value to clear/whats writen to			
-	STR r1, [r4];clear original			
-	LDR r4, =0xE002800C;load clear		
-	STR r1, [r4];store to write to uart			
-	LDR r4, =store_string ;load what was writen			
-	LDRB r0, [r4] ;store in r0	
+stag3
+	ldr r4, =0xE002800C ; base address
+	
+	MOV r1, #0x00260000;load value to clear/whats writen to
+	STR r1, [r4] 
 	LDR r4, =0xE0028004 ;load where to write in uart
 			
 	CMP r0, #119; w in Ascii		
@@ -342,13 +332,12 @@ nblue
 
 ngreen		
 	CMP r0, #114;r in Ascii			
-	BNE stag3 ;go to the begining			
+	BNE quit3 ;go to the begining			
 	MOV r1, #0x00240000 ;red			
 	STR r1, [r4];print red			
-	B stag3;go again
 			
 quit3	
-	LDMFD SP!, {r0 - r4, lr}
+	LDMFD SP!, {r1 - r4, lr}
 	BX LR
 
 
@@ -356,6 +345,7 @@ clear_display
     STMFD SP!, {r1, r4, lr}
 	LDR r4, =0xE0028008
 	MOV r1, #0x00003f80;load value to clear/whats writen to
+	ORR r1, #0x00260000
 	STR r1, [r4];clear original	
 	LDR r4, =0xE002800C;load clear
 	STR r1, [r4];
