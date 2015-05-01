@@ -76,6 +76,19 @@ uart_init
 interrupt_init
 	stmfd sp!, {r0, r4, r5, lr}
 	
+			; Push button setup		 
+	LDR r4, =0xE002C000
+	LDR r5, [r4]
+	ORR r5, r5, #0x20000000
+	BIC r5, r5, #0x10000000
+	STR r5, [r4]  ; PINSEL0 bits 29:28 = 10
+
+	LDR r4, =0xFFFFF000
+	LDR r5, [r4, #0xC]
+	ORR r5, r5, #0x8000 ; External Interrupt 1 
+	ORR r5, r5, #0x40;and uart0 pg52
+	STR r5, [r4, #0xC]
+
 	ldr r4, =0xFFFFF010 	;interrupt enable register	(VICIntEnable)
 	ldr r5, [r4]
 	orr r5, r5, #0x10		;enable bit 4 for timer 0
@@ -91,7 +104,7 @@ interrupt_init
 	str r5, [r4]			
 
 	ldr r4, =0xE000401C		;frequency = 14745600*(5/4)
-	ldr r5, =0x8CA000		; .5 seconds
+	ldr r5, =0x465000		; .25 seconds
 	str r5, [r4]			;stores speed into mr1
 
 	ldr r4, =0xE0004014		;timer 0
@@ -99,17 +112,27 @@ interrupt_init
 	orr r5, r5, #0x18		;enable bit 4 to reset tc when mr1 == tc
 	str r5, [r4]					
 	
-	;ldr r4, =0xE0008014	;timer 1
-	;ldr r5, [r4]			;enable bit 3 to generate interrupt on mr1 == tc 
-	;orr r5, r5, #0x18		;enable bit 4 to reset tc when mr1 == tc
-	;str r5, [r4]
-	
-
+	ldr r4, =0xE000801C		;frequency = 14745600*(5/4)
+	ldr r5, =0x1194000		; 1 second
+	str r5, [r4]
 
 	ldr r4, =0xE000C004		;enable uart interrupt read_data_available
 	ldr r5, [r4]
 	orr r5, r5, #1
 	str r5, [r4]
+
+			; Enable Interrupts
+	LDR r4, =0xFFFFF000
+	LDR r5, [r4, #0x10] 
+	ORR r5, r5, #0x8000 ; External Interrupt 
+	ORR r5, r5, #0x40 ;and uart0 pg52
+	STR r5, [r4, #0x10]
+
+		; External Interrupt 1 setup for edge sensitive
+	LDR r4, =0xE01FC148
+	LDR r5, [r4]
+	ORR r5, r5, #2  ; EINT1 = Edge Sensitive
+	STR r5, [r4]
 	
 	MRS r0, CPSR			; Enable FIQ's, Disable IRQ's
 	BIC r0, r0, #0x40
@@ -119,7 +142,6 @@ interrupt_init
 
 	ldmfd sp!, {r0, r4, r5, lr}
 	bx lr
-	
 	
 	;saves string to store_string
 read_string    
